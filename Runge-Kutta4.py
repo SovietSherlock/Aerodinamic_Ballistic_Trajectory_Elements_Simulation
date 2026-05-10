@@ -16,7 +16,7 @@ Version: 1.0
 
 import numpy as np
 import matplotlib.pyplot as plt
-import math
+from math import *
 
 def Runge_Kutta4(function, init_condition_x, init_condition_y, end_condition_x, time_step):
     # функция, реализующая метод численного интегрирования системы обыкновенных дифференциальных уравнений, метод Рунге-Кутты 4-го порядка
