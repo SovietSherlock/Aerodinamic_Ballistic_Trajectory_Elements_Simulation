@@ -27,7 +27,7 @@ def Runge_Kutta4(ODE_system, init_conditions, end_conditions, record, dt, t_0 = 
     t = np.zeros(max_steps)
     m = len(init_conditions) + 1
     n = len(record(t_0, init_conditions))
-    result = np.zeros(max_steps, m+n)
+    result = np.zeros((max_steps, m+n))
 
     i = 0
     y = init_conditions
