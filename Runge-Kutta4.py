@@ -48,5 +48,3 @@ def Runge_Kutta4(ODE_system, init_conditions, end_conditions, record, dt, t_0 = 
         result[i, 1: m] = y
         result[i, m: m + n] = record(t[i], y)
     return result[0: i + 1, :]
-
-    return
