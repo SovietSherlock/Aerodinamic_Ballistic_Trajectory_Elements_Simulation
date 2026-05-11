@@ -83,3 +83,21 @@ class Math_Model(Aircraft_Initial_Parameters):
         # Метод вычисления проекции аэродинамической силы на ось Y скоростной системы координат:
         return C_Ya_interp*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.alpha(t)
 
+    def M_z_alpha(self, t, C_Xa_interp, C_Ya_interp):
+        # Метод вычисления градиента статического аэродинамического момента относительно связанной оси z ЛА:
+        return -(C_Xa_interp + C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l
+
+    def a(self,t):
+        # Метод вычисления скорости звука:
+        return 20.046796*(self.atm.T(t[3])**2)
+
+    def Mach_number(self, t):
+        # Метод вычисления числа Маха:
+        return t[0]/self.a(t)
+
+    def ODE_system(self, t, C_Xa_interp, C_Ya_interp):
+        #Метод вычисления системы ОДУ
+
+        return
+
+
