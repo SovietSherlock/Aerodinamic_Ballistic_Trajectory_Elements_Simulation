@@ -16,7 +16,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Runge_Kutta4 import *
 import math
-from atmosphere import *
+import atmosphere as at
+
 
 
 
