@@ -22,7 +22,7 @@ def Runge_Kutta4(ODE_system, init_conditions, end_conditions, record, dt, t_0 = 
     # init_conditions - начальные условия переменных
     # end_conditions - конечные условия для переменных
     # record - запись выходных данных
-    # dt - шаг интегрирования по независимой переменной (в нашем случае, шаг по времени)
+    # dt - шаг интегрирования по независимой переменной
 
     t = np.zeros(max_steps)
     m = len(init_conditions) + 1
