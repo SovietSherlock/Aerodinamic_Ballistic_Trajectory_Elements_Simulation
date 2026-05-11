@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Runge_Kutta4 import *
 import math
+from atmosphere import *
 
 
 
@@ -47,8 +48,31 @@ class Aircraft_Initial_Parameters:
         self.C_Xa = np.array([0.30, 0.30, 0.55, 0.70, 0.84, 0.86, 0.87, 0.83, 0.80, 0.79, 0.65, 0.55, 0.50, 0.45, 0.40]) # массив значений аэродинамического коэффициента C_Xa
         self.C_Ya = np.array([0.25, 0.25, 0.25, 0.20, 0.30, 0.31, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]) # массив значений аэродинамического коэффициента C_Ya
 
+        # Вызов метода интерполяции аэродинамических коэффициентов C_Xa и C_Ya:
+        self.interp_C_XY_a(self.M)
+
         # Шаг интегрирования:
         self.delta_t = 0.1 # сек
 
+    def interp_C_XY_a(self, M):
+        # функция интерполяции аэродинамических коэффициентов C_Xa и C_Ya:
 
-        return
+        M_limit = np.clip(M, self.M[0], self.M[-1])
+        C_Xa_interp = np.interp(M_limit, self.M, self.C_Xa)
+        C_Ya_interp = np.interp(M_limit, self.M, self.C_Ya)
+        return C_Xa_interp, C_Ya_interp
+
+class Math_Model(Aircraft_Initial_Parameters):
+    # Класс реализации математической модели расчета элементов траектории летательного аппарата на пассивном (баллистическом) участке
+
+    def __init__(self):
+        super().__init__()
+
+    def alpha(self, t):
+        # Метод вычисления угла alpha,  ̊:
+        return t[5] - t[1]
+
+    def X_a(self, t, C_Xa_interp):
+        # Метод вычисления проекции аэродинамической силы на ось X скоростной системы координат:
+        return C_Xa_interp*self.atm
+
