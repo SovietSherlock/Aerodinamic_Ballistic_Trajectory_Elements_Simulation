@@ -107,4 +107,20 @@ class Math_Model(Aircraft_Initial_Parameters):
         self.dt_dtau[5] = t[4]
         return
 
+    def init_conditions_1(self, t, C_Xa_interp, C_Ya_interp):
+        # функция входных параметров для Theta_c0_1:
+        return np.array([0, self.Theta_c0_1, 0, 0, 0, 0])
+
+    def init_conditions_2(self, t, C_Xa_interp, C_Ya_interp):
+        # функция входных параметров для Theta_c0_2:
+        return np.array([0, self.Theta_c0_2, 0, 0, 0, 0])
+
+    def init_conditions_3(self, t, C_Xa_interp, C_Ya_interp):
+        # функция входных параметров для Theta_c0_3:
+        return np.array([0, self.Theta_c0_3, 0, 0, 0, 0])
+
+    def init_conditions_4(self, t, C_Xa_interp, C_Ya_interp):
+        # функция входных параметров для Theta_c0_4:
+        return np.array([0, self.Theta_c0_4, 0, 0, 0, 0])
+
 
