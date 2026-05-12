@@ -123,4 +123,13 @@ class Math_Model(Aircraft_Initial_Parameters):
         # функция входных параметров для Theta_c0_4:
         return np.array([0, self.Theta_c0_4, 0, 0, 0, 0])
 
+    def init_ODE_system(self, t, C_Xa_interp, C_Ya_interp):
+        return self.ODE_system(t, C_Xa_interp, C_Ya_interp)
+
+    def record(self, t, C_Xa_interp, C_Ya_interp):
+        # Функция выходных данных для алгоритма Runge_Kutta4:
+        return np.array([self.m_0, t[0], self.a(t), self.Mach_number(t), C_Xa_interp, self.X_a(t, C_Xa_interp),
+                         self.alpha(t), t[1], self.dt_dtau[0], C_Ya_interp, self.Y_a(t, C_Ya_interp), self.dt_dtau[1],
+                         math.degrees(t[0]), math.degrees(t[5]), t[3], self.dt_dtau[3], t[2], self.dt_dtau[2],
+                         self.M_z_alpha(t, C_Xa_interp, C_Ya_interp), t[4], self.dt_dtau[4], self.atm.rho(t[3]), self.atm.p(t[3])])
 
