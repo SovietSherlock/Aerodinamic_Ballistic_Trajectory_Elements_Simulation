@@ -5,7 +5,7 @@ import scipy.interpolate as interp
 
 class Atmosphere_GOST_4401_81:
     def __init__(self):
-        self.g = 9.80665
+        self.g_0 = 9.80665
         self.r = 6356767
         self.R = 8314.32 / 28.96442
         self.beta_S = 1.458e-6
@@ -20,10 +20,10 @@ class Atmosphere_GOST_4401_81:
         for i in range(1, len(self.data_T)):
             if self.data_B[i - 1] != 0:
                 self.data_p[i] = self.data_p[i - 1] * \
-                                 (self.data_T[i] / self.data_T[i - 1]) ** (-self.g / (self.data_B[i - 1] * self.R))
+                                 (self.data_T[i] / self.data_T[i - 1]) ** (-self.g_0 / (self.data_B[i - 1] * self.R))
             else:
                 self.data_p[i] = self.data_p[i - 1] * \
-                                 exp(-self.g * (self.data_H[i] - self.data_H[i - 1]) / (self.R * self.data_T[i - 1]))
+                                 exp(-self.g_0 * (self.data_H[i] - self.data_H[i - 1]) / (self.R * self.data_T[i - 1]))
 
     def T(self, h):
         H = self.r * h / (self.r + h)
@@ -46,9 +46,9 @@ class Atmosphere_GOST_4401_81:
                 if H >= self.data_H[j]:
                     i = j
             if self.data_B[i] != 0:
-                return self.data_p[i] * (self.T_H(H) / self.data_T[i]) ** (-self.g / (self.data_B[i] * self.R))
+                return self.data_p[i] * (self.T_H(H) / self.data_T[i]) ** (-self.g_0 / (self.data_B[i] * self.R))
             else:
-                return self.data_p[i] * exp(-self.g * (H - self.data_H[i]) / (self.R * self.data_T[i]))
+                return self.data_p[i] * exp(-self.g_0 * (H - self.data_H[i]) / (self.R * self.data_T[i]))
 
     def rho(self, h):
         return self.p(h) / (self.R * self.T(h))
@@ -61,3 +61,6 @@ class Atmosphere_GOST_4401_81:
 
     def lam(self, T):
         return 2.648151e-3 * T ** 1.5 / (T + 245.4 * 10 ** (-12 / T))
+
+    def g(self, h):
+        return self.g_0*(self.r / (self.r + h)) ** 2

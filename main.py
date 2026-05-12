@@ -69,6 +69,7 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def __init__(self):
         super().__init__()
+        self.dt_dtau = None
         self.atm = Atmosphere_GOST_4401_81 ()
 
     def alpha(self, t):
@@ -96,8 +97,10 @@ class Math_Model(Aircraft_Initial_Parameters):
         return t[0]/self.a(t)
 
     def ODE_system(self, t, C_Xa_interp, C_Ya_interp):
-        #Метод вычисления системы ОДУ
-
+        #Метод вычисления системы ОДУ:
+        self.dt_dtau = np.zeros(6)
+        self.dt_dtau[0] = -self.X_a(t, C_Xa_interp)/self.m_0 - self.g
+        self.dt_dtau[1] = self.Y_a(t, C_Ya_interp)/self.m_0
         return
 
 
