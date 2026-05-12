@@ -99,8 +99,12 @@ class Math_Model(Aircraft_Initial_Parameters):
     def ODE_system(self, t, C_Xa_interp, C_Ya_interp):
         #Метод вычисления системы ОДУ:
         self.dt_dtau = np.zeros(6)
-        self.dt_dtau[0] = -self.X_a(t, C_Xa_interp)/self.m_0 - self.g
-        self.dt_dtau[1] = self.Y_a(t, C_Ya_interp)/self.m_0
+        self.dt_dtau[0] = -self.X_a(t, C_Xa_interp)/self.m_0 - self.atm.g(t[3])*sin(t[1])
+        self.dt_dtau[1] = self.Y_a(t, C_Ya_interp)/(self.m_0*t[0]) - self.atm.g(t[3])*sin(t[1])/t[0]
+        self.dt_dtau[2] = t[0]*cos(t[1])
+        self.dt_dtau[3] = t[0]*sin(t[1])
+        self.dt_dtau[4] = (self.M_z_alpha(t, C_Xa_interp, C_Ya_interp)/self.J_z)*self.alpha(t)
+        self.dt_dtau[5] = t[4]
         return
 
 
