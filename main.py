@@ -60,12 +60,12 @@ class Aircraft_Initial_Parameters:
 
 class Math_Model(Aircraft_Initial_Parameters):
     # Класс реализации математической модели расчета элементов траектории летательного аппарата на пассивном (баллистическом) участке
-    #t[0] = V (скорость ЛА)
-    #t[1] = Theta_c (угол наклона траектории)
-    #t[2] = x (дальность)
-    #t[3] = y (высота)
-    #t[4] = omega_z (угловая скорость относительно связанной оси z ЛА)
-    #t[5] = theta (угол тангажа)
+    #t[0] = V (скорость ЛА, м/с)
+    #t[1] = Theta_c (угол наклона траеткории, рад)
+    #t[2] = x (координаты центра масс ЛА в стартовой системе координат по оси X, м )
+    #t[3] = y (координаты центра масс ЛА в стартовой системе координат по оси Y, м)
+    #t[4] = omega_z (угловая скорость относительно связанной оси z ЛА, 1/с)
+    #t[5] = theta (угол тангажа, рад)
 
     def __init__(self):
         super().__init__()
@@ -98,7 +98,7 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def ODE_system(self, t, C_Xa_interp, C_Ya_interp):
         #Метод вычисления системы ОДУ:
-        self.dt_dtau = np.zeros(6)
+        self.dt_dtau = np.zeros(6) # создание numpy массива из нулей под заготовки dt_dtau
         self.dt_dtau[0] = -self.X_a(t, C_Xa_interp)/self.m_0 - self.atm.g(t[3])*sin(t[1])
         self.dt_dtau[1] = self.Y_a(t, C_Ya_interp)/(self.m_0*t[0]) - self.atm.g(t[3])*sin(t[1])/t[0]
         self.dt_dtau[2] = t[0]*cos(t[1])
