@@ -50,13 +50,16 @@ class Aircraft_Initial_Parameters:
         # Шаг интегрирования:
         self.delta_t = 0.1 # сек
 
+        # Аэродинамические коэффициенты:
+        self.C_Ya_interp = None
+        self.C_Xa_interp = None
+
     def interp_C_XY_a(self, M):
         # функция интерполяции аэродинамических коэффициентов C_Xa и C_Ya:
-
         M_limit = np.clip(M, self.M[0], self.M[-1])
-        C_Xa_interp = np.interp(M_limit, self.M, self.C_Xa)
-        C_Ya_interp = np.interp(M_limit, self.M, self.C_Ya)
-        return C_Xa_interp, C_Ya_interp
+        self.C_Xa_interp = np.interp(M_limit, self.M, self.C_Xa)
+        self.C_Ya_interp = np.interp(M_limit, self.M, self.C_Ya)
+        return self.C_Xa_interp, self.C_Ya_interp
 
 class Math_Model(Aircraft_Initial_Parameters):
     # Класс реализации математической модели расчета элементов траектории летательного аппарата на пассивном (баллистическом) участке
@@ -71,69 +74,76 @@ class Math_Model(Aircraft_Initial_Parameters):
         super().__init__()
         self.dt_dtau = None
         self.atm = Atmosphere_GOST_4401_81 ()
+        self.dtau = self.delta_t
 
     def alpha(self, t):
         # Метод вычисления угла атаки, ̊:
         return t[5] - t[1]
 
-    def X_a(self, t, C_Xa_interp):
+    def X_a(self, t):
         # Метод вычисления проекции аэродинамической силы на ось X скоростной системы координат:
-        return C_Xa_interp*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)
+        return self.C_Xa_interp*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)
 
-    def Y_a(self, t, C_Ya_interp):
+    def Y_a(self, t):
         # Метод вычисления проекции аэродинамической силы на ось Y скоростной системы координат:
-        return C_Ya_interp*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.alpha(t)
+        return self.C_Ya_interp*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.alpha(t)
 
-    def M_z_alpha(self, t, C_Xa_interp, C_Ya_interp):
+    def M_z_alpha(self, t):
         # Метод вычисления градиента статического аэродинамического момента относительно связанной оси z ЛА:
-        return -(C_Xa_interp + C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l
+        return -(self.C_Xa_interp + self.C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l
 
     def a(self,t):
         # Метод вычисления скорости звука:
-        return 20.046796*(self.atm.T(t[3])**2)
+        return 20.046796*(self.atm.T(t[3])**(1/2))
 
     def Mach_number(self, t):
         # Метод вычисления числа Маха:
         return t[0]/self.a(t)
 
-    def ODE_system(self, t, C_Xa_interp, C_Ya_interp):
+    def ODE_system(self, tau, t):
         # Метод вычисления системы ОДУ:
         self.dt_dtau = np.zeros(6) # создание numpy массива из нулей под заготовки dt_dtau
-        self.dt_dtau[0] = -self.X_a(t, C_Xa_interp)/self.m_0 - self.atm.g(t[3])*sin(t[1])
-        self.dt_dtau[1] = self.Y_a(t, C_Ya_interp)/(self.m_0*t[0]) - self.atm.g(t[3])*sin(t[1])/t[0]
+        self.dt_dtau[0] = -self.X_a(t)/self.m_0 - self.atm.g(t[3])*sin(t[1])
+        self.dt_dtau[1] = self.Y_a(t)/(self.m_0*t[0]) - self.atm.g(t[3])*sin(t[1])/t[0]
         self.dt_dtau[2] = t[0]*cos(t[1])
         self.dt_dtau[3] = t[0]*sin(t[1])
-        self.dt_dtau[4] = (self.M_z_alpha(t, C_Xa_interp, C_Ya_interp)/self.J_z)*self.alpha(t)
+        self.dt_dtau[4] = (self.M_z_alpha(t)/self.J_z)*self.alpha(t)
         self.dt_dtau[5] = t[4]
-        return
+        return np.array(self.dt_dtau)
 
-    def init_conditions_1(self, t, C_Xa_interp, C_Ya_interp):
+    def init_conditions_1(self, t):
         # функция входных параметров для Theta_c0_1:
         return np.array([0, self.Theta_c0_1, 0, 0, 0, 0])
 
-    def init_conditions_2(self, t, C_Xa_interp, C_Ya_interp):
+    def init_conditions_2(self, t):
         # функция входных параметров для Theta_c0_2:
         return np.array([0, self.Theta_c0_2, 0, 0, 0, 0])
 
-    def init_conditions_3(self, t, C_Xa_interp, C_Ya_interp):
+    def init_conditions_3(self, t):
         # функция входных параметров для Theta_c0_3:
         return np.array([0, self.Theta_c0_3, 0, 0, 0, 0])
 
-    def init_conditions_4(self, t, C_Xa_interp, C_Ya_interp):
+    def init_conditions_4(self, t,):
         # функция входных параметров для Theta_c0_4:
         return np.array([0, self.Theta_c0_4, 0, 0, 0, 0])
 
-    def init_ODE_system(self, t, C_Xa_interp, C_Ya_interp):
-        return self.ODE_system(t, C_Xa_interp, C_Ya_interp)
 
-    def record(self, t, C_Xa_interp, C_Ya_interp):
+    def init_ODE_system(self, tau, t):
+        # функция подготовки системы ОДУ на вход метода Runge-Kutta4
+        M = self.Mach_number(t)  # вычисление числа Маха на шаге интегрирования
+        self.interp_C_XY_a(M)  # вычисление соответствующих коэффициентов вычисленному числу Маха
+        return self.ODE_system(tau, t)
+
+    def record(self, t):
         # функция выходных данных для алгоритма Runge_Kutta4:
-        return np.array([self.m_0, t[0], self.a(t), self.Mach_number(t), C_Xa_interp, self.X_a(t, C_Xa_interp),
-                         self.alpha(t), t[1], self.dt_dtau[0], C_Ya_interp, self.Y_a(t, C_Ya_interp), self.dt_dtau[1],
+        return np.array([self.m_0, t[0], self.a(t), self.Mach_number(t), self.C_Xa_interp, self.X_a(t),
+                         self.alpha(t), t[1], self.dt_dtau[0], self.C_Ya_interp, self.Y_a(t), self.dt_dtau[1],
                          math.degrees(t[0]), math.degrees(t[5]), t[3], self.dt_dtau[3], t[2], self.dt_dtau[2],
-                         self.M_z_alpha(t, C_Xa_interp, C_Ya_interp), t[4], self.dt_dtau[4], self.atm.rho(t[3]), self.atm.p(t[3])])
+                         self.M_z_alpha(t), t[4], self.dt_dtau[4], self.atm.rho(t[3]), self.atm.p(t[3])])
 
     def stop_conditions(self, t):
          # функция условия окончания интегрирования:
-        return t[3] == 0
+         if t[3] <= 0:
+             return -1
+         return 1
 
