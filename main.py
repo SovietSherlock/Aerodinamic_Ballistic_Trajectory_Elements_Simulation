@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from Runge_Kutta4 import *
 import math
 from atmosphere import *
+from math import sin, cos, radians, degrees
 
 
 
@@ -147,3 +148,17 @@ class Math_Model(Aircraft_Initial_Parameters):
              return -1
          return 1
 
+    def time_step(self, t):
+        self.dtau = self.delta_t
+        return self.dtau
+
+class Simulation(Math_Model):
+    # Класс вычислений переменных параметров по математической модели:
+
+    def __init__(self, max_steps=100000):
+        super().__init__()
+
+        result_Theta_c0_1 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_1, self.stop_conditions, self.record, self.time_step, 0, max_steps)
+        result_Theta_c0_2 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_2, self.stop_conditions, self.record, self.time_step, 0, max_steps)
+        result_Theta_c0_3 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_3, self.stop_conditions, self.record, self.time_step, 0, max_steps)
+        result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4, self.stop_conditions, self.record, self.time_step, 0, max_steps)
