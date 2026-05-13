@@ -30,10 +30,10 @@ class Aircraft_Initial_Parameters:
         # Кинематические параметры начального состояния движения ЛА:
         self.v_01 = 245 # начальная скорость летательного аппарата в первом случае, м/с
         self.v_02 = 952 # начальная скорость летательного аппарата во втором случае, м/с
-        self.Theta_c0_1 = math.radians(20) # Начальный угол траектории 20 ̊
-        self.Theta_c0_2 = math.radians(30) # Начальный угол траектории 30 ̊
-        self.Theta_c0_3 = math.radians(40) # Начальный угол траектории 40 ̊
-        self.Theta_c0_4 = math.radians(50) # Начальный угол траектории 50 ̊
+        self.Theta_c0_1 = math.radians(20) # Начальный угол наклона траектории 20 ̊
+        self.Theta_c0_2 = math.radians(30) # Начальный угол наклона траектории 30 ̊
+        self.Theta_c0_3 = math.radians(40) # Начальный угол наклона траектории 40 ̊
+        self.Theta_c0_4 = math.radians(50) # Начальный угол наклона траектории 50 ̊
 
         # Инерционные параметры ЛА:
         self.g_0 = 9.80665 # ускорение силы притяжения на поверхности Земли, м/(с^2)
@@ -164,9 +164,136 @@ class Simulation(Math_Model):
         result_Theta_c0_3 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_3, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
         result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
 
-        columns = ['tau', 'V', 'Theta_c', 'x', 'y', 'omega_z', 'theta', 'm_0', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'C_Ya', 'Y_a', 'M_z_alpha', 'rho', 'p']
+        columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'Theta_c_rad', 'dV/dtau', 'C_Ya', 'Y_a', 'dTheta_c/dtau', 'Theta_c_deg',
+                   'theta', 'y', 'dy/dtau', 'x', 'dx/dttau', 'M_z_alpha', 'omega_z', 'omega_z/dtau', 'rho', 'p']
 
         self.df_1 = pd.DataFrame(result_Theta_c0_1, columns = columns)
         self.df_2 = pd.DataFrame(result_Theta_c0_2, columns = columns)
         self.df_3 = pd.DataFrame(result_Theta_c0_3, columns = columns)
         self.df_4 = pd.DataFrame(result_Theta_c0_4, columns = columns)
+
+        pd.set_option('display.precision', 5)
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', None)
+
+    def print_table(self, case=1, time_step=1.0):
+        # Вывод таблицы результатов с шагом по времени
+
+        # Выбор номера DataFrame
+        if case == 1:
+            df = self.df_1
+            angle = 20
+        elif case == 2:
+            df = self.df_2
+            angle = 30
+        elif case == 3:
+            df = self.df_3
+            angle = 40
+        elif case == 4:
+            df = self.df_4
+            angle = 50
+
+        # Фильтрация данных (только положительная высота и скорость):
+        df_filtered = df[(df['y'] > 0) & (df['V'] > 0)].copy()
+
+        # Округление времени до целой секунды:
+        df_filtered['time_rounded'] = np.round(df_filtered['tau'] / time_step) * time_step
+
+        # Группировка по округленному времени и выбор строки в каждой группе
+        df_table = df_filtered.groupby('time_rounded').first().reset_index()
+
+        # Удаление вспомогательного столбца
+        df_table = df_table.drop(columns=['time_rounded'])
+
+        # Выбор нужных столбцов для отображения
+        display_columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'Theta_c_rad', 'dV/dtau', 'C_Ya', 'Y_a', 'dTheta_c/dtau', 'Theta_c_deg',
+                   'theta', 'y', 'dy/dtau', 'x', 'dx/dtau', 'M_z_alpha', 'omega_z', 'omega_z/dtau', 'rho', 'p']
+
+        # Создание таблицы вывода
+        table = df_table[display_columns].copy()
+
+        # Название столбца - параметр и его размерность
+        table = table.columns = [
+            't, с',
+            'm_0, кг',
+            'V, м/с',
+            'a, м/с'
+            'M',
+            'C_Xa',
+            'X_a, H',
+            'alpha, град',
+            'Θ_с, рад',
+            'dV/dt, м/с^2',
+            'C_Ya_alpha',
+            'Y_a, H',
+            'dΘ_с/dt, с^-1'
+            'Θ_с, град',
+            'θ, град',
+            'y, м',
+            'dy/dt, м/с',
+            'x, м',
+            'dx/dt, м/с',
+            'M_z_alpha, кг*м^2/с^2',
+            'ω_z, c^-1',
+            'ω_z/dt, c^-2',
+            'ρ, кг/м³',
+            'p, Па'
+        ]
+
+        # Вывод заголовка
+        print("\n" + "=" * 120)
+        print(f"РЕЗУЛЬТАТЫ РАСЧЕТА ТРАЕКТОРИИ (начальный угол Θ_с0 = {angle}°)")
+        print("=" * 120)
+        print(f"\nШаг вывода: {time_step} секунда(ы)")
+        print(f"Всего точек в таблице: {len(table)}")
+        print("\n")
+
+        # Вывод таблицы
+        print(table.to_string(index=False))
+
+        return table
+
+    def print_all_tables(self, time_step=1.0):
+        # Вывод таблиц для всех четырех углов:
+        for case in range(1, 5):
+            self.print_table(case, time_step)
+            print("\n" + "-" * 120 + "\n")
+
+    def save_table_to_csv(self, case=1, filename=None, time_step=1.0):
+        # Сохранение таблицы в CSV файл:
+        table = self.print_table(case, time_step)
+
+        if filename is None:
+            angle = [20, 30, 40, 50][case - 1]
+            filename = f"Результаты расчета для угла Θ_с0= {angle}°.csv"
+
+        table.to_csv(filename, index=False)
+        print(f"\nТаблица сохранена в файл: {filename}")
+
+    def get_table_at_time(self, case=1, target_time=10.0):
+        #Получение параметров в конкретный момент времени:
+        if case == 1:
+            df = self.df_1
+        elif case == 2:
+            df = self.df_2
+        elif case == 3:
+            df = self.df_3
+        else:
+            df = self.df_4
+
+        # Поиск ближайшей строки к целевому времени
+        idx = (df['tau'] - target_time).abs().idxmin()
+        result = df.loc[idx]
+
+        print(f"\nПараметры в момент t = {target_time} с:")
+        print("-" * 50)
+        print(f"  Скорость V:              {result['V']:.2f} м/с")
+        print(f"  Высота y:                {result['y']:.2f} м")
+        print(f"  Дальность x:             {result['x']:.2f} м")
+        print(f"  Угол траектории Θ:       {result['Theta_c_deg']:.3f}°")
+        print(f"  Число Маха M:            {result['M']:.4f}")
+        print(f"  Угол атаки α:            {result['alpha']:.4f} рад")
+        print(f"  Плотность ρ:             {result['rho']:.5f} кг/м³")
+        print(f"  Давление p:              {result['p']:.1f} Па")
+
+        return result
