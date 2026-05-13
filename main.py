@@ -18,6 +18,7 @@ from Runge_Kutta4 import *
 import math
 from atmosphere import *
 from math import sin, cos, radians, degrees
+import pandas as pd
 
 
 
@@ -112,19 +113,19 @@ class Math_Model(Aircraft_Initial_Parameters):
         self.dt_dtau[5] = t[4]
         return np.array(self.dt_dtau)
 
-    def init_conditions_1(self, t):
+    def init_conditions_1(self):
         # функция входных параметров для Theta_c0_1:
         return np.array([0, self.Theta_c0_1, 0, 0, 0, 0])
 
-    def init_conditions_2(self, t):
+    def init_conditions_2(self):
         # функция входных параметров для Theta_c0_2:
         return np.array([0, self.Theta_c0_2, 0, 0, 0, 0])
 
-    def init_conditions_3(self, t):
+    def init_conditions_3(self):
         # функция входных параметров для Theta_c0_3:
         return np.array([0, self.Theta_c0_3, 0, 0, 0, 0])
 
-    def init_conditions_4(self, t,):
+    def init_conditions_4(self):
         # функция входных параметров для Theta_c0_4:
         return np.array([0, self.Theta_c0_4, 0, 0, 0, 0])
 
@@ -137,9 +138,9 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def record(self, t):
         # функция выходных данных для алгоритма Runge_Kutta4:
-        return np.array([self.m_0, t[0], self.a(t), self.Mach_number(t), self.C_Xa_interp, self.X_a(t),
+        return np.array([tau, self.m_0, t[0], self.a(t), self.Mach_number(t), self.C_Xa_interp, self.X_a(t),
                          self.alpha(t), t[1], self.dt_dtau[0], self.C_Ya_interp, self.Y_a(t), self.dt_dtau[1],
-                         math.degrees(t[0]), math.degrees(t[5]), t[3], self.dt_dtau[3], t[2], self.dt_dtau[2],
+                         math.degrees(t[1]), math.degrees(t[5]), t[3], self.dt_dtau[3], t[2], self.dt_dtau[2],
                          self.M_z_alpha(t), t[4], self.dt_dtau[4], self.atm.rho(t[3]), self.atm.p(t[3])])
 
     def stop_conditions(self, t):
@@ -158,7 +159,14 @@ class Simulation(Math_Model):
     def __init__(self, max_steps=100000):
         super().__init__()
 
-        result_Theta_c0_1 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_1, self.stop_conditions, self.record, self.time_step, 0, max_steps)
-        result_Theta_c0_2 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_2, self.stop_conditions, self.record, self.time_step, 0, max_steps)
-        result_Theta_c0_3 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_3, self.stop_conditions, self.record, self.time_step, 0, max_steps)
-        result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4, self.stop_conditions, self.record, self.time_step, 0, max_steps)
+        result_Theta_c0_1 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_1, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
+        result_Theta_c0_2 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_2, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
+        result_Theta_c0_3 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_3, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
+        result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4, self.stop_conditions, self.record, self.delta_t, 0, max_steps)
+
+        columns = ['tau', 'V', 'Theta_c', 'x', 'y', 'omega_z', 'theta', 'm_0', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'C_Ya', 'Y_a', 'M_z_alpha', 'rho', 'p']
+
+        self.df_1 = pd.DataFrame(result_Theta_c0_1, columns = columns)
+        self.df_2 = pd.DataFrame(result_Theta_c0_2, columns = columns)
+        self.df_3 = pd.DataFrame(result_Theta_c0_3, columns = columns)
+        self.df_4 = pd.DataFrame(result_Theta_c0_4, columns = columns)
