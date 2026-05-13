@@ -179,7 +179,7 @@ class Simulation(Math_Model):
         result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4(), self.stop_conditions, self.record, self.delta_t, 0, max_steps)
 
         columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'Theta_c_rad', 'dV_dtau', 'C_Ya', 'Y_a', 'dTheta_c_dtau', 'Theta_c_deg',
-                   'theta', 'y', 'dy_dtau', 'x', 'dx_dtau', 'M_z_alpha', 'omega_z', 'omega_z_dtau', 'rho', 'p']
+                   'theta', 'y', 'dy_dtau', 'x', 'dx_dtau', 'M_z_alpha', 'omega_z', 'domega_z_dtau', 'rho', 'p']
 
         self.df_1 = pd.DataFrame(result_Theta_c0_1[:, 7:31], columns=columns)
         self.df_2 = pd.DataFrame(result_Theta_c0_2[:, 7:31], columns=columns)
@@ -199,44 +199,61 @@ class Simulation(Math_Model):
         for df, angle in cases:
             df_filtered = df.query('V>=0 and y>=-100').reset_index(drop=True)
 
-            # Заголовок таблицы
-            print("\n" + "=" * 130)
-            print(f"РЕЗУЛЬТАТЫ РАСЧЕТА ТРАЕКТОРИИ (начальный угол Θ₀ = {angle}°)")
-            print("=" * 130)
-            print(f"{'t,с':>6} | {'V,м/с':>10} | {'Θ,град':>10} | {'x,м':>12} | {'y,м':>10} | {'M':>8} | {'α,рад':>10} | {'C_Xa':>8} | {'C_Ya':>8} | {'ρ,кг/м³':>12} | {'p,Па':>10}")
-            print("-" * 130)
-
             for k in range(0, len(df_filtered), 10):
                 if len(df_filtered) > k:
                     row = df_filtered.iloc[k]
 
+                    # Извлечение значений с правильными именами столбцов
                     tau = f"{row['tau']:.2f}"
+                    m_0 = f"{row['m_0']:.2f}"
                     V_val = f"{row['V']:.2f}"
-                    Theta_c_deg_val = f"{row['Theta_c_deg']:.3f}"
-                    x_val = f"{row['x']:.2f}"
-                    y_val = f"{row['y']:.2f}"
+                    a_val = f"{row['a']:.2f}"
                     M_val = f"{row['Much_Number']:.4f}"
-                    alpha_val = f"{row['alpha']:.5f}"
                     C_Xa_val = f"{row['C_Xa']:.4f}"
+                    X_a_val = f"{row['X_a']:.2f}"
+                    alpha_val = f"{row['alpha']:.5f}"
+                    Theta_c_rad_val = f"{row['Theta_c_rad']:.4f}"
+                    dV_dtau_val = f"{row['dV_dtau']:.2f}"
                     C_Ya_val = f"{row['C_Ya']:.4f}"
+                    Y_a_val = f"{row['Y_a']:.2f}"
+                    dTheta_c_dtau_val = f"{row['dTheta_c_dtau']:.4f}"
+                    Theta_c_deg_val = f"{row['Theta_c_deg']:.3f}"
+                    theta_deg = f"{row['theta']:.2f}"
+                    y_val = f"{row['y']:.2f}"
+                    dy_dtau_val = f"{row['dy_dtau']:.2f}"
+                    x_val = f"{row['x']:.2f}"
+                    dx_dtau_val = f"{row['dx_dtau']:.2f}"
+                    M_z_alpha_val = f"{row['M_z_alpha']:.2f}"
+                    omega_z_val = f"{row['omega_z']:.4f}"
+                    domega_z_dtau_val = f"{row['domega_z_dtau']:.4f}" if 'domega_z_dtau' in row else f"{row['domega_dtau']:.4f}"
                     rho_val = f"{row['rho']:.5f}"
                     p_val = f"{row['p']:.1f}"
-
-                    # Вывод в консоль
-                    print(f"{tau:>6} | {V_val:>10} | {Theta_c_deg_val:>10} | {x_val:>12} | {y_val:>10} | {M_val:>8} | {alpha_val:>10} | {C_Xa_val:>8} | {C_Ya_val:>8} | {rho_val:>12} | {p_val:>10}")
 
                     # Сохраняем данные для CSV
                     all_data.append({
                         'Угол, град': angle,
                         't, с': float(tau),
+                        'm, кг': float(m_0),
                         'V, м/с': float(V_val),
-                        'Θ, град': float(Theta_c_deg_val),
-                        'x, м': float(x_val),
-                        'y, м': float(y_val),
+                        'a, м/с': float(a_val),
                         'M': float(M_val),
-                        'α, рад': float(alpha_val),
                         'C_Xa': float(C_Xa_val),
+                        'X_a, Н': float(X_a_val),
+                        'α, рад': float(alpha_val),
+                        'Θ_c, рад': float(Theta_c_rad_val),
+                        'dV/dt, м/с²': float(dV_dtau_val),
                         'C_Ya': float(C_Ya_val),
+                        'Y_a, Н': float(Y_a_val),
+                        'dΘ_c/dt, с⁻¹': float(dTheta_c_dtau_val),
+                        'Θ_c, град': float(Theta_c_deg_val),
+                        'θ, град': float(theta_deg),
+                        'y, м': float(y_val),
+                        'dy/dt, м/с': float(dy_dtau_val),
+                        'x, м': float(x_val),
+                        'dx/dt, м/с': float(dx_dtau_val),
+                        'M_z^α, Н·м/рад': float(M_z_alpha_val),
+                        'ω_z, с⁻¹': float(omega_z_val),
+                        'dω_z/dt, с⁻²': float(domega_z_dtau_val),
                         'ρ, кг/м³': float(rho_val),
                         'p, Па': float(p_val)
                     })
@@ -244,16 +261,59 @@ class Simulation(Math_Model):
         # Сохранение в CSV файл (с добавлением точек падения)
         all_data_with_impact = all_data.copy()  # копируем существующие данные
 
-        # Собираем точки падения и добавляем их в основной список
         for df, angle in cases:
-            df_all = df.query('V>=0').reset_index(drop=True)
+            df_filtered = df.query('V>=0 and y>=-100').reset_index(drop=True)
 
-            for i in range(1, len(df_all)):
-                if df_all.iloc[i - 1]['y'] > 0 and df_all.iloc[i]['y'] <= 0:
-                    y1 = df_all.iloc[i - 1]['y']
-                    y2 = df_all.iloc[i]['y']
-                    t1 = df_all.iloc[i - 1]['tau']
-                    t2 = df_all.iloc[i]['tau']
+            # Заголовок таблицы
+            print("\n" + "=" * 310)
+            print(f"РЕЗУЛЬТАТЫ РАСЧЕТА ТРАЕКТОРИИ (начальный угол Θ_c0 = {angle}°)")
+            print("=" * 310)
+            print(
+                f"{'t,с':>6} | {'m,кг':>8} | {'V,м/с':>9} | {'a,м/с':>8} | {'M':>6} | {'C_Xa':>6} | {'X_a,Н':>9} | {'α,рад':>9} | {'Θ_c,рад':>9} | {'dV/dt':>9} | {'C_Ya':>6} | {'Y_a,Н':>8} | {'dΘ_c/dt':>9} | {'Θ_c,град':>9} | {'θ,град':>8} | {'y,м':>8} | {'dy/dt':>8} | {'x,м':>10} | {'dx/dt':>8} | {'M_z^α':>10} | {'ω_z':>8} | {'dω_z/dt':>9} | {'ρ,кг/м³':>11} | {'p,Па':>9}")
+            print("-" * 310)
+
+            # Собираем все строки для вывода (регулярные + точка падения)
+            all_rows = []
+
+            # Добавляем регулярные строки с шагом 10
+            for k in range(0, len(df_filtered), 10):
+                if len(df_filtered) > k:
+                    row = df_filtered.iloc[k]
+                    all_rows.append({
+                        'type': 'regular',
+                        'tau': row['tau'],
+                        'm_0': row['m_0'],
+                        'V': row['V'],
+                        'a': row['a'],
+                        'Much_Number': row['Much_Number'],
+                        'C_Xa': row['C_Xa'],
+                        'X_a': row['X_a'],
+                        'alpha': row['alpha'],
+                        'Theta_c_rad': row['Theta_c_rad'],
+                        'dV_dtau': row['dV_dtau'],
+                        'C_Ya': row['C_Ya'],
+                        'Y_a': row['Y_a'],
+                        'dTheta_c_dtau': row['dTheta_c_dtau'],
+                        'Theta_c_deg': row['Theta_c_deg'],
+                        'theta': row['theta'],
+                        'y': row['y'],
+                        'dy_dtau': row['dy_dtau'],
+                        'x': row['x'],
+                        'dx_dtau': row['dx_dtau'],
+                        'M_z_alpha': row['M_z_alpha'],
+                        'omega_z': row['omega_z'],
+                        'domega_z_dtau': row['domega_z_dtau'],
+                        'rho': row['rho'],
+                        'p': row['p']
+                    })
+
+            # Поиск и добавление точки падения
+            for i in range(1, len(df_filtered)):
+                if df_filtered.iloc[i - 1]['y'] > 0 and df_filtered.iloc[i]['y'] <= 0:
+                    y1 = df_filtered.iloc[i - 1]['y']
+                    y2 = df_filtered.iloc[i]['y']
+                    t1 = df_filtered.iloc[i - 1]['tau']
+                    t2 = df_filtered.iloc[i]['tau']
 
                     if t2 != t1:
                         t_impact = t1 + (0 - y1) * (t2 - t1) / (y2 - y1)
@@ -262,42 +322,154 @@ class Simulation(Math_Model):
                         t_impact = t1
                         frac = 0
 
-                    V_impact = df_all.iloc[i - 1]['V'] + frac * (df_all.iloc[i]['V'] - df_all.iloc[i - 1]['V'])
-                    Theta_impact = df_all.iloc[i - 1]['Theta_c_deg'] + frac * (
-                                df_all.iloc[i]['Theta_c_deg'] - df_all.iloc[i - 1]['Theta_c_deg'])
-                    x_impact = df_all.iloc[i - 1]['x'] + frac * (df_all.iloc[i]['x'] - df_all.iloc[i - 1]['x'])
-                    M_impact = df_all.iloc[i - 1]['Much_Number'] + frac * (
-                                df_all.iloc[i]['Much_Number'] - df_all.iloc[i - 1]['Much_Number'])
-                    alpha_impact = df_all.iloc[i - 1]['alpha'] + frac * (
-                                df_all.iloc[i]['alpha'] - df_all.iloc[i - 1]['alpha'])
-                    Cx_impact = df_all.iloc[i - 1]['C_Xa'] + frac * (
-                                df_all.iloc[i]['C_Xa'] - df_all.iloc[i - 1]['C_Xa'])
-                    Cy_impact = df_all.iloc[i - 1]['C_Ya'] + frac * (
-                                df_all.iloc[i]['C_Ya'] - df_all.iloc[i - 1]['C_Ya'])
-                    rho_impact = df_all.iloc[i - 1]['rho'] + frac * (df_all.iloc[i]['rho'] - df_all.iloc[i - 1]['rho'])
-                    p_impact = df_all.iloc[i - 1]['p'] + frac * (df_all.iloc[i]['p'] - df_all.iloc[i - 1]['p'])
+                    # Интерполяция всех параметров
+                    m_impact = df_filtered.iloc[i - 1]['m_0'] + frac * (
+                                df_filtered.iloc[i]['m_0'] - df_filtered.iloc[i - 1]['m_0'])
+                    V_impact = df_filtered.iloc[i - 1]['V'] + frac * (
+                                df_filtered.iloc[i]['V'] - df_filtered.iloc[i - 1]['V'])
+                    a_impact = df_filtered.iloc[i - 1]['a'] + frac * (
+                                df_filtered.iloc[i]['a'] - df_filtered.iloc[i - 1]['a'])
+                    M_impact = df_filtered.iloc[i - 1]['Much_Number'] + frac * (
+                                df_filtered.iloc[i]['Much_Number'] - df_filtered.iloc[i - 1]['Much_Number'])
+                    C_Xa_impact = df_filtered.iloc[i - 1]['C_Xa'] + frac * (
+                                df_filtered.iloc[i]['C_Xa'] - df_filtered.iloc[i - 1]['C_Xa'])
+                    X_a_impact = df_filtered.iloc[i - 1]['X_a'] + frac * (
+                                df_filtered.iloc[i]['X_a'] - df_filtered.iloc[i - 1]['X_a'])
+                    alpha_impact = df_filtered.iloc[i - 1]['alpha'] + frac * (
+                                df_filtered.iloc[i]['alpha'] - df_filtered.iloc[i - 1]['alpha'])
+                    Theta_c_rad_impact = df_filtered.iloc[i - 1]['Theta_c_rad'] + frac * (
+                                df_filtered.iloc[i]['Theta_c_rad'] - df_filtered.iloc[i - 1]['Theta_c_rad'])
+                    dV_dtau_impact = df_filtered.iloc[i - 1]['dV_dtau'] + frac * (
+                                df_filtered.iloc[i]['dV_dtau'] - df_filtered.iloc[i - 1]['dV_dtau'])
+                    C_Ya_impact = df_filtered.iloc[i - 1]['C_Ya'] + frac * (
+                                df_filtered.iloc[i]['C_Ya'] - df_filtered.iloc[i - 1]['C_Ya'])
+                    Y_a_impact = df_filtered.iloc[i - 1]['Y_a'] + frac * (
+                                df_filtered.iloc[i]['Y_a'] - df_filtered.iloc[i - 1]['Y_a'])
+                    dTheta_c_dtau_impact = df_filtered.iloc[i - 1]['dTheta_c_dtau'] + frac * (
+                                df_filtered.iloc[i]['dTheta_c_dtau'] - df_filtered.iloc[i - 1]['dTheta_c_dtau'])
+                    Theta_c_deg_impact = df_filtered.iloc[i - 1]['Theta_c_deg'] + frac * (
+                                df_filtered.iloc[i]['Theta_c_deg'] - df_filtered.iloc[i - 1]['Theta_c_deg'])
+                    theta_impact = df_filtered.iloc[i - 1]['theta'] + frac * (
+                                df_filtered.iloc[i]['theta'] - df_filtered.iloc[i - 1]['theta'])
+                    dy_dtau_impact = df_filtered.iloc[i - 1]['dy_dtau'] + frac * (
+                                df_filtered.iloc[i]['dy_dtau'] - df_filtered.iloc[i - 1]['dy_dtau'])
+                    x_impact = df_filtered.iloc[i - 1]['x'] + frac * (
+                                df_filtered.iloc[i]['x'] - df_filtered.iloc[i - 1]['x'])
+                    dx_dtau_impact = df_filtered.iloc[i - 1]['dx_dtau'] + frac * (
+                                df_filtered.iloc[i]['dx_dtau'] - df_filtered.iloc[i - 1]['dx_dtau'])
+                    M_z_alpha_impact = df_filtered.iloc[i - 1]['M_z_alpha'] + frac * (
+                                df_filtered.iloc[i]['M_z_alpha'] - df_filtered.iloc[i - 1]['M_z_alpha'])
+                    omega_z_impact = df_filtered.iloc[i - 1]['omega_z'] + frac * (
+                                df_filtered.iloc[i]['omega_z'] - df_filtered.iloc[i - 1]['omega_z'])
+                    domega_z_dtau_impact = df_filtered.iloc[i - 1]['domega_z_dtau'] + frac * (
+                                df_filtered.iloc[i]['domega_z_dtau'] - df_filtered.iloc[i - 1]['domega_z_dtau'])
+                    rho_impact = df_filtered.iloc[i - 1]['rho'] + frac * (
+                                df_filtered.iloc[i]['rho'] - df_filtered.iloc[i - 1]['rho'])
+                    p_impact = df_filtered.iloc[i - 1]['p'] + frac * (
+                                df_filtered.iloc[i]['p'] - df_filtered.iloc[i - 1]['p'])
 
-                    # Добавляем точку падения в список
+                    impact_row = {
+                        'type': 'impact',
+                        'tau': t_impact,
+                        'm_0': m_impact,
+                        'V': V_impact,
+                        'a': a_impact,
+                        'Much_Number': M_impact,
+                        'C_Xa': C_Xa_impact,
+                        'X_a': X_a_impact,
+                        'alpha': alpha_impact,
+                        'Theta_c_rad': Theta_c_rad_impact,
+                        'dV_dtau': dV_dtau_impact,
+                        'C_Ya': C_Ya_impact,
+                        'Y_a': Y_a_impact,
+                        'dTheta_c_dtau': dTheta_c_dtau_impact,
+                        'Theta_c_deg': Theta_c_deg_impact,
+                        'theta': theta_impact,
+                        'y': 0.0,
+                        'dy_dtau': dy_dtau_impact,
+                        'x': x_impact,
+                        'dx_dtau': dx_dtau_impact,
+                        'M_z_alpha': M_z_alpha_impact,
+                        'omega_z': omega_z_impact,
+                        'domega_z_dtau': domega_z_dtau_impact,
+                        'rho': rho_impact,
+                        'p': p_impact
+                    }
+                    all_rows.append(impact_row)
+
+                    # ДОБАВЛЯЕМ ТОЧКУ ПАДЕНИЯ В CSV СПИСОК
                     all_data_with_impact.append({
                         'Угол, град': angle,
                         't, с': t_impact,
+                        'm, кг': m_impact,
                         'V, м/с': V_impact,
-                        'Θ, град': Theta_impact,
-                        'x, м': x_impact,
-                        'y, м': 0.0,
+                        'a, м/с': a_impact,
                         'M': M_impact,
+                        'C_Xa': C_Xa_impact,
+                        'X_a, Н': X_a_impact,
                         'α, рад': alpha_impact,
-                        'C_Xa': Cx_impact,
-                        'C_Ya': Cy_impact,
+                        'Θ_c, рад': Theta_c_rad_impact,
+                        'dV/dt, м/с²': dV_dtau_impact,
+                        'C_Ya': C_Ya_impact,
+                        'Y_a, Н': Y_a_impact,
+                        'dΘ_c/dt, с⁻¹': dTheta_c_dtau_impact,
+                        'Θ_c, град': Theta_c_deg_impact,
+                        'θ, град': theta_impact,
+                        'y, м': 0.0,
+                        'dy/dt, м/с': dy_dtau_impact,
+                        'x, м': x_impact,
+                        'dx/dt, м/с': dx_dtau_impact,
+                        'M_z^α, Н·м/рад': M_z_alpha_impact,
+                        'ω_z, с⁻¹': omega_z_impact,
+                        'dω_z/dt, с⁻²': domega_z_dtau_impact,
                         'ρ, кг/м³': rho_impact,
                         'p, Па': p_impact
                     })
                     break
 
-        # Сохраняем основной CSV с добавленными точками падения
-        if all_data_with_impact:
-            df_output = pd.DataFrame(all_data_with_impact)
-            # Сортируем по углу и времени
+            # Сортируем строки по времени
+            all_rows.sort(key=lambda x: x['tau'])
+
+            # Вывод всех строк в одной таблице
+            for row in all_rows:
+                suffix = " *ПАДЕНИЕ*" if row['type'] == 'impact' else ""
+                print(
+                    f"{row['tau']:6.2f} | {row['m_0']:8.2f} | {row['V']:9.2f} | {row['a']:8.2f} | {row['Much_Number']:6.4f} | {row['C_Xa']:6.4f} | {row['X_a']:9.2f} | {row['alpha']:9.5f} | {row['Theta_c_rad']:9.4f} | {row['dV_dtau']:9.2f} | {row['C_Ya']:6.4f} | {row['Y_a']:8.2f} | {row['dTheta_c_dtau']:9.4f} | {row['Theta_c_deg']:9.3f} | {row['theta']:8.2f} | {row['y']:8.2f} | {row['dy_dtau']:8.2f} | {row['x']:10.2f} | {row['dx_dtau']:8.2f} | {row['M_z_alpha']:10.2f} | {row['omega_z']:8.4f} | {row['domega_z_dtau']:9.4f} | {row['rho']:11.5f} | {row['p']:9.1f}{suffix}")
+
+                # Сохраняем ВСЕ строки (регулярные + падение) в all_data с округлением
+                all_data.append({
+                    'Угол, град': angle,
+                    't, с': round(row['tau'], 2),
+                    'm, кг': round(row['m_0'], 2),
+                    'V, м/с': round(row['V'], 2),
+                    'a, м/с': round(row['a'], 2),
+                    'M': round(row['Much_Number'], 4),
+                    'C_Xa': round(row['C_Xa'], 4),
+                    'X_a, Н': round(row['X_a'], 2),
+                    'α, рад': round(row['alpha'], 5),
+                    'Θ_c, рад': round(row['Theta_c_rad'], 4),
+                    'dV/dt, м/с²': round(row['dV_dtau'], 2),
+                    'C_Ya': round(row['C_Ya'], 4),
+                    'Y_a, Н': round(row['Y_a'], 2),
+                    'dΘ_c/dt, с⁻¹': round(row['dTheta_c_dtau'], 4),
+                    'Θ_c, град': round(row['Theta_c_deg'], 3),
+                    'θ, град': round(row['theta'], 2),
+                    'y, м': round(row['y'], 2),
+                    'dy/dt, м/с': round(row['dy_dtau'], 2),
+                    'x, м': round(row['x'], 2),
+                    'dx/dt, м/с': round(row['dx_dtau'], 2),
+                    'M_z^α, Н·м/рад': round(row['M_z_alpha'], 2),
+                    'ω_z, с⁻¹': round(row['omega_z'], 4),
+                    'dω_z/dt, с⁻²': round(row['domega_z_dtau'], 4),
+                    'ρ, кг/м³': round(row['rho'], 5),
+                    'p, Па': round(row['p'], 1)
+                })
+
+            print("=" * 310)
+
+        # Сохраняем основной CSV (all_data уже содержит все строки)
+        if all_data:
+            df_output = pd.DataFrame(all_data)
             df_output = df_output.sort_values(['Угол, град', 't, с']).reset_index(drop=True)
             df_output.to_csv('траектория_полета.csv', index=False, encoding='utf-8-sig')
             print(f"\n✅ Данные сохранены в файл: траектория_полета.csv")
