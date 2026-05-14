@@ -779,11 +779,246 @@ class Plotter:
         print("=" * 80)
 
 
-class inverse_problem(Simulation):
+class Inverse_Problem(Simulation):
     # Класс вычисления оптимальных значений начального угла наклона траектории, обеспечивающих максимальную дальность полета ЛА
 
     def __init__(self):
         super().__init__()
+
+    def __init__(self, max_steps=15000):
+        super().__init__(max_steps)
+        self.velocities = [245, 952]
+        self.angle_range = np.arange(15, 55.1, 0.5)  # углы от 15 до 55 градусов с шагом 0.5°
+
+    def calculate_range_for_angle(self, V0, angle_deg):
+        """
+        Расчет дальности полета для заданной скорости и угла
+
+        Параметры:
+        ----------
+        V0 : float
+            Начальная скорость, м/с
+        angle_deg : float
+            Начальный угол, градусы
+
+        Возвращает:
+        ----------
+        range_m : float
+            Дальность полета, м
+        flight_time : float
+            Время полета, с
+        """
+        # Переводим угол в радианы
+        angle_rad = math.radians(angle_deg)
+
+        # Начальные условия
+        init_cond = np.array([V0, angle_rad, 0, 0.001, angle_rad, 0])
+
+        # Выполняем расчет
+        result = Runge_Kutta4(
+            self.init_ODE_system,
+            init_cond,
+            self.stop_conditions,
+            self.record,
+            self.delta_t,
+            0,
+            self.sim.max_steps if hasattr(self.sim, 'max_steps') else 15000
+        )
+
+        # Создаем DataFrame
+        columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha',
+                   'Theta_c_rad', 'dV_dtau', 'C_Ya', 'Y_a', 'dTheta_c_dtau', 'Theta_c_deg',
+                   'theta', 'y', 'dy_dtau', 'x', 'dx_dtau', 'M_z_alpha', 'omega_z',
+                   'domega_z_dtau', 'rho', 'p']
+
+        df = pd.DataFrame(result[:, 7:31], columns=columns)
+
+        # Находим точку падения (y <= 0)
+        df_ground = df[df['y'] <= 0]
+
+        if len(df_ground) > 0:
+            # Если есть точка с отрицательной высотой, интерполируем
+            if len(df_ground) == 1 and df_ground.iloc[0]['y'] < 0:
+                # Ищем переход через ноль
+                for i in range(1, len(df)):
+                    if df.iloc[i - 1]['y'] > 0 and df.iloc[i]['y'] <= 0:
+                        y1 = df.iloc[i - 1]['y']
+                        y2 = df.iloc[i]['y']
+                        t1 = df.iloc[i - 1]['tau']
+                        t2 = df.iloc[i]['tau']
+                        x1 = df.iloc[i - 1]['x']
+                        x2 = df.iloc[i]['x']
+
+                        if t2 != t1:
+                            frac = (0 - y1) / (y2 - y1)
+                            t_impact = t1 + frac * (t2 - t1)
+                            x_impact = x1 + frac * (x2 - x1)
+                        else:
+                            t_impact = t1
+                            x_impact = x1
+
+                        return x_impact, t_impact
+            else:
+                # Берем первую точку с y <= 0
+                first_ground = df_ground.iloc[0]
+                return first_ground['x'], first_ground['tau']
+        else:
+            # Если не достигли земли, берем последнюю точку
+            last_row = df.iloc[-1]
+            return last_row['x'], last_row['tau']
+
+    def find_optimal_angle(self, V0, verbose=True):
+        """
+        Поиск оптимального угла для заданной скорости
+
+        Параметры:
+        ----------
+        V0 : float
+            Начальная скорость, м/с
+        verbose : bool
+            Выводить прогресс
+
+        Возвращает:
+        ----------
+        optimal_angle : float
+            Оптимальный угол, градусы
+        max_range : float
+            Максимальная дальность, м
+        results : dict
+            Словарь с результатами для всех углов
+        """
+        results = {}
+        ranges = []
+        angles_list = []
+
+        print(f"\n{'=' * 60}")
+        print(f"ПОИСК ОПТИМАЛЬНОГО УГЛА ДЛЯ V₀ = {V0} м/с")
+        print(f"{'=' * 60}")
+
+        for i, angle in enumerate(self.angle_range):
+            if verbose and i % 20 == 0:
+                print(f"  Расчет для угла {angle:.1f}°...")
+
+            x_range, flight_time = self.calculate_range_for_angle(V0, angle)
+            results[angle] = {'range': x_range, 'time': flight_time}
+            ranges.append(x_range)
+            angles_list.append(angle)
+
+        # Находим максимальную дальность
+        max_idx = np.argmax(ranges)
+        optimal_angle = angles_list[max_idx]
+        max_range = ranges[max_idx]
+        max_time = results[optimal_angle]['time']
+
+        print(f"\n{'=' * 60}")
+        print(f"РЕЗУЛЬТАТЫ ДЛЯ V₀ = {V0} м/с")
+        print(f"{'=' * 60}")
+        print(f"  Оптимальный угол: {optimal_angle:.2f}°")
+        print(f"  Максимальная дальность: {max_range:.2f} м")
+        print(f"  Время полета: {max_time:.2f} с")
+
+        return optimal_angle, max_range, results
+
+    def plot_range_vs_angle(self, V0, results=None, save_path=None):
+        """
+        Построение графика зависимости дальности от угла
+
+        Параметры:
+        ----------
+        V0 : float
+            Начальная скорость, м/с
+        results : dict, optional
+            Результаты расчета (если None - будут рассчитаны)
+        save_path : str, optional
+            Путь для сохранения графика
+        """
+        if results is None:
+            _, _, results = self.find_optimal_angle(V0, verbose=False)
+
+        angles = list(results.keys())
+        ranges = [results[angle]['range'] for angle in angles]
+
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        # График зависимости дальности от угла
+        ax.plot(angles, ranges, 'b-', linewidth=2, label=f'V₀ = {V0} м/с')
+
+        # Находим оптимальный угол
+        max_idx = np.argmax(ranges)
+        opt_angle = angles[max_idx]
+        max_range = ranges[max_idx]
+
+        # Отмечаем точку максимума
+        ax.scatter(opt_angle, max_range, color='red', s=150, zorder=5,
+                   label=f'Оптимум: {opt_angle:.2f}°, дальность = {max_range:.0f} м')
+
+        ax.set_xlabel('Начальный угол $\\Theta_0$, град')
+        ax.set_ylabel('Дальность полета $x$, м')
+        ax.set_title(f'Зависимость дальности полета от начального угла (V₀ = {V0} м/с)')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def solve(self, save_dir="results/optimization"):
+        """
+        Решение обратной задачи для обеих скоростей
+
+        Параметры:
+        ----------
+        save_dir : str
+            Директория для сохранения результатов
+        """
+        import os
+        os.makedirs(save_dir, exist_ok=True)
+
+        print("\n" + "=" * 80)
+        print("РЕШЕНИЕ ОБРАТНОЙ ЗАДАЧИ БАЛЛИСТИКИ")
+        print("=" * 80)
+        print("Поиск оптимального угла, обеспечивающего максимальную дальность полета")
+
+        results_summary = {}
+
+        for V in self.velocities:
+            opt_angle, max_range, results = self.find_optimal_angle(V)
+            results_summary[V] = {
+                'optimal_angle': opt_angle,
+                'max_range': max_range,
+                'all_results': results
+            }
+
+            # Сохраняем график
+            save_path = os.path.join(save_dir, f"range_vs_angle_V{V}.png")
+            self.plot_range_vs_angle(V, results, save_path=save_path)
+
+            # Сохраняем таблицу результатов в CSV
+            df_results = pd.DataFrame([
+                {'Угол, град': angle,
+                 'Дальность, м': results[angle]['range'],
+                 'Время полета, с': results[angle]['time']}
+                for angle in results.keys()
+            ])
+            csv_path = os.path.join(save_dir, f"range_results_V{V}.csv")
+            df_results.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            print(f"  Результаты сохранены в: {csv_path}")
+
+        # Вывод сводной таблицы
+        print("\n" + "=" * 60)
+        print("СВОДНАЯ ТАБЛИЦА РЕЗУЛЬТАТОВ")
+        print("=" * 60)
+        print(
+            f"{'Скорость V₀, м/с':>18} | {'Оптимальный угол, °':>20} | {'Максимальная дальность, м':>25} | {'Время полета, с':>16}")
+        print("-" * 85)
+        for V, data in results_summary.items():
+            # Находим время для оптимального угла
+            opt_time = data['all_results'][data['optimal_angle']]['time']
+            print(f"{V:>18} | {data['optimal_angle']:>20.2f} | {data['max_range']:>25.2f} | {opt_time:>16.2f}")
+        print("=" * 60)
+
+        return results_summary
 
 # ==================== Объектная часть ====================
 
@@ -821,3 +1056,12 @@ if hasattr(sim, 'df_4'):
 # Построение и сохранение графиков
 plotter = Plotter(sim)
 plotter.plot_all(save_dir="graphics")  # Сохраняем в папку graphics
+
+print("\n" + "=" * 80)
+print("РЕШЕНИЕ ОБРАТНОЙ ЗАДАЧИ")
+print("=" * 80)
+
+solver = Inverse_Problem(max_steps=15000)
+
+# Решение обратной задачи
+results = solver.solve(save_dir="results/optimization")
