@@ -909,7 +909,7 @@ class Inverse_Problem(Simulation):
 
         ax.set_xlabel('Начальный угол $\\Theta_0$, град')
         ax.set_ylabel('Дальность полета $x$, м')
-        ax.set_title(f'Зависимость дальности полета от начального угла (V₀ = {V0} м/с)')
+        ax.set_title(f'Зависимость дальности полета ЛА от начального угла бросания (V₀ = {V0} м/с)')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
