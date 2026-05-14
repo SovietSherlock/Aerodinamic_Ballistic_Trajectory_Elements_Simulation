@@ -785,7 +785,7 @@ class Inverse_Problem(Simulation):
     def __init__(self, max_steps=15000):
         super().__init__(max_steps)
         self.velocities = [245, 952]
-        self.angle_range = np.arange(15, 55.1, 0.5)  # углы от 15 до 55 градусов с шагом 0.5°
+        self.angle_range = np.arange(15, 55.1, 0.1)  # углы от 15 до 55 градусов с шагом 0.1°
         self.max_steps = max_steps  # сохраняем для использования в расчетах
 
     def calculate_range_for_angle(self, V0, angle_deg):
