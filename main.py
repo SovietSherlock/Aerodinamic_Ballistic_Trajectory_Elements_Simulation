@@ -446,7 +446,7 @@ class Simulation(Math_Model):
 
 
 class Plotter:
-    # Класс вывода графиков зависимостей параметров ЛА от координаты от времени
+    # Класс вывода графиков зависимостей параметров ЛА от координаты и от времени
 
     def __init__(self, sim_instance):
         self.sim = sim_instance
@@ -487,15 +487,15 @@ class Plotter:
                     self.data[(V, angle)] = self.sim.dataframes[key]
 
     def _get_linestyle(self, V):
-        """Возвращает стиль линии в зависимости от скорости"""
+        #Возвращает стиль линии в зависимости от скорости
         return '-' if V == 245 else '--'
 
     def _get_color(self, angle):
-        """Возвращает цвет в зависимости от угла"""
+        #Возвращает цвет в зависимости от угла
         return self.angle_colors.get(angle, 'black')
 
     def plot_V_t(self, save_path=None):
-        """График зависимости скорости от времени V(t)"""
+        #График зависимости скорости от времени V(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -520,7 +520,7 @@ class Plotter:
         return fig
 
     def plot_Theta_c_t(self, save_path=None):
-        """График зависимости угла траектории от времени Θ_c(t)"""
+        #График зависимости угла траектории от времени Θ_c(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -545,7 +545,7 @@ class Plotter:
         return fig
 
     def plot_y_t(self, save_path=None):
-        """График зависимости высоты от времени y(t)"""
+        #График зависимости высоты от времени y(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -570,7 +570,7 @@ class Plotter:
         return fig
 
     def plot_x_t(self, save_path=None):
-        """График зависимости дальности от времени x(t)"""
+        #График зависимости дальности от времени x(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -595,7 +595,7 @@ class Plotter:
         return fig
 
     def plot_theta_t(self, save_path=None):
-        """График зависимости угла тангажа от времени θ(t)"""
+        #График зависимости угла тангажа от времени θ(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -620,7 +620,7 @@ class Plotter:
         return fig
 
     def plot_alpha_t(self, save_path=None):
-        """График зависимости угла атаки от времени α(t)"""
+        #График зависимости угла атаки от времени α(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -645,7 +645,7 @@ class Plotter:
         return fig
 
     def plot_V_x(self, save_path=None):
-        """График зависимости скорости от дальности V(x)"""
+        #График зависимости скорости от дальности V(x)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -671,7 +671,7 @@ class Plotter:
         return fig
 
     def plot_Theta_c_x(self, save_path=None):
-        """График зависимости угла траектории от дальности Θ_c(x)"""
+        #График зависимости угла траектории от дальности Θ_c(x)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -697,7 +697,7 @@ class Plotter:
         return fig
 
     def plot_y_x(self, save_path=None):
-        """График траектории полета y(x)"""
+        #График траектории полета y(x)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -723,7 +723,7 @@ class Plotter:
         return fig
 
     def plot_omega_z_t(self, save_path=None):
-        """График зависимости угловой скорости от времени ω_z(t)"""
+        #График зависимости угловой скорости от времени ω_z(t)
         fig, ax = plt.subplots(figsize=(20, 10))
 
         for V in self.velocities:
@@ -748,7 +748,7 @@ class Plotter:
         return fig
 
     def plot_all(self, save_dir="graphics"):
-        """Построение всех графиков с сохранением в папку graphics"""
+        #Построение всех графиков с сохранением в папку graphics
         import os
         os.makedirs(save_dir, exist_ok=True)
 
@@ -779,7 +779,13 @@ class Plotter:
         print("=" * 80)
 
 
-# ==================== ОСНОВНАЯ ЧАСТЬ ====================
+class inverse_problem(Simulation):
+    # Класс вычисления оптимальных значений начального угла наклона траектории, обеспечивающих максимальную дальность полета ЛА
+
+    def __init__(self):
+        super().__init__()
+
+# ==================== Объектная часть ====================
 
 print("\n" + "=" * 80)
 print("НАЧАЛО РАСЧЕТА БАЛЛИСТИЧЕСКОЙ ТРАЕКТОРИИ")
