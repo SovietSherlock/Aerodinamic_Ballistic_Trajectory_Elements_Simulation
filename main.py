@@ -510,7 +510,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$V$, м/с')
-        ax.set_title('Зависимость скорости от времени $V(t)$')
+        ax.set_title('Зависимость скорости ЛА от времени полёта, $V(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -535,7 +535,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$\\Theta_c$, град')
-        ax.set_title('Зависимость угла траектории от времени $\\Theta_c(t)$')
+        ax.set_title('Зависимость угла траектории полёта ЛА от времени полёта, $\\Theta_c(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -560,7 +560,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$y$, м')
-        ax.set_title('Зависимость высоты от времени $y(t)$')
+        ax.set_title('Зависимость высоты полёта ЛА от времени полёта, $y(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -585,7 +585,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$x$, м')
-        ax.set_title('Зависимость дальности от времени $x(t)$')
+        ax.set_title('Зависимость дальности полёта ЛА от времени полёта, $x(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -610,7 +610,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$\\theta$, град')
-        ax.set_title('Зависимость угла тангажа от времени $\\theta(t)$')
+        ax.set_title('Зависимость угла тангажа от времени полёта ЛА, $\\theta(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -635,7 +635,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$\\alpha$, рад')
-        ax.set_title('Зависимость угла атаки от времени $\\alpha(t)$')
+        ax.set_title('Зависимость угла атаки от времени полёта ЛА, $\\alpha(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -661,7 +661,7 @@ class Plotter:
 
         ax.set_xlabel('$x$, м')
         ax.set_ylabel('$V$, м/с')
-        ax.set_title('Зависимость скорости от дальности $V(x)$')
+        ax.set_title('Зависимость скорости ЛА от дальности полёта, $V(x)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -687,7 +687,7 @@ class Plotter:
 
         ax.set_xlabel('$x$, м')
         ax.set_ylabel('$\\Theta_c$, град')
-        ax.set_title('Зависимость угла траектории от дальности $\\Theta_c(x)$')
+        ax.set_title('Зависимость угла траектории полёта ЛА от дальности полёта, $\\Theta_c(x)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -713,7 +713,7 @@ class Plotter:
 
         ax.set_xlabel('$x$, м')
         ax.set_ylabel('$y$, м')
-        ax.set_title('Траектория полета $y(x)$')
+        ax.set_title('Траектория полета ЛА, $y(x)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
@@ -738,7 +738,7 @@ class Plotter:
 
         ax.set_xlabel('$t$, с')
         ax.set_ylabel('$\\omega_z$, с$^{-1}$')
-        ax.set_title('Зависимость угловой скорости от времени $\\omega_z(t)$')
+        ax.set_title('Зависимость угловой скорости ЛА относительно связанной оси z от времени полета, $\\omega_z(t)$')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best')
 
