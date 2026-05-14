@@ -77,6 +77,8 @@ class Math_Model(Aircraft_Initial_Parameters):
         self.dt_dtau = None
         self.atm = Atmosphere_GOST_4401_81 ()
         self.dtau = self.delta_t
+        self.velocities = np.array([self.v_01, self.v_02])
+        self.angles = np.array([self.Theta_c0_1, self.Theta_c0_2, self.Theta_c0_3, self.Theta_c0_4])
 
     def alpha(self, t):
         # Метод вычисления угла атаки, ̊:
@@ -113,21 +115,29 @@ class Math_Model(Aircraft_Initial_Parameters):
         self.dt_dtau[5] = t[4]
         return np.array(self.dt_dtau)
 
-    def init_conditions_1(self):
+    def init_conditions(self):
+        # генератор входных параметров для алгоритма Runge_Kutta4:
+        for v in self.velocities:
+            for Theta in self.angles:
+                yield np.array([v, Theta, 0, 0.001, Theta, 0])
+
+
+
+    #def init_conditions_1(self):
         # функция входных параметров для Theta_c0_1:
-        return np.array([self.v_01, self.Theta_c0_1, 0, 0.001, 0, 0])
+        #return np.array([self.v_01, self.Theta_c0_1, 0, 0.001, 0, 0])
 
-    def init_conditions_2(self):
+    #def init_conditions_2(self):
         # функция входных параметров для Theta_c0_2:
-        return np.array([self.v_01, self.Theta_c0_2, 0, 0.001, 0, 0])
+        #return np.array([self.v_01, self.Theta_c0_2, 0, 0.001, 0, 0])
 
-    def init_conditions_3(self):
+    #def init_conditions_3(self):
         # функция входных параметров для Theta_c0_3:
-        return np.array([self.v_01, self.Theta_c0_3, 0, 0.001, 0, 0])
+        #return np.array([self.v_01, self.Theta_c0_3, 0, 0.001, 0, 0])
 
-    def init_conditions_4(self):
+    #def init_conditions_4(self):
         # функция входных параметров для Theta_c0_4:
-        return np.array([self.v_01, self.Theta_c0_4, 0, 0.001, 0, 0])
+        #return np.array([self.v_01, self.Theta_c0_4, 0, 0.001, 0, 0])
 
 
     def init_ODE_system(self, tau, t):
@@ -167,24 +177,76 @@ class Math_Model(Aircraft_Initial_Parameters):
         self.dtau = self.delta_t
         return self.dtau
 
+
 class Simulation(Math_Model):
     # Класс вычислений переменных параметров по математической модели:
 
     def __init__(self, max_steps=10):
         super().__init__()
 
-        result_Theta_c0_1 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_1(), self.stop_conditions, self.record, self.delta_t, 0, max_steps)
-        result_Theta_c0_2 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_2(), self.stop_conditions, self.record, self.delta_t, 0, max_steps)
-        result_Theta_c0_3 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_3(), self.stop_conditions, self.record, self.delta_t, 0, max_steps)
-        result_Theta_c0_4 = Runge_Kutta4(self.init_ODE_system, self.init_conditions_4(), self.stop_conditions, self.record, self.delta_t, 0, max_steps)
+        # Словарь для хранения всех результатов
+        self.results = {}
+        self.dataframes = {}
 
-        columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha', 'Theta_c_rad', 'dV_dtau', 'C_Ya', 'Y_a', 'dTheta_c_dtau', 'Theta_c_deg',
-                   'theta', 'y', 'dy_dtau', 'x', 'dx_dtau', 'M_z_alpha', 'omega_z', 'domega_z_dtau', 'rho', 'p']
+        # Список для хранения всех комбинаций (DataFrame, скорость, угол)
+        self.cases_list = []
 
-        self.df_1 = pd.DataFrame(result_Theta_c0_1[:, 7:31], columns=columns)
-        self.df_2 = pd.DataFrame(result_Theta_c0_2[:, 7:31], columns=columns)
-        self.df_3 = pd.DataFrame(result_Theta_c0_3[:, 7:31], columns=columns)
-        self.df_4 = pd.DataFrame(result_Theta_c0_4[:, 7:31], columns=columns)
+        # Перебираем все комбинации через генератор
+        for init_cond in self.init_conditions():
+            # Определяем скорость и угол из начальных условий
+            V0 = init_cond[0]
+            Theta0 = init_cond[1]
+
+            # Переводим угол в градусы для названия
+            Theta_deg = int(math.degrees(Theta0))
+            V_int = int(V0)
+
+            # Выполняем расчет
+            result = Runge_Kutta4(
+                self.init_ODE_system,
+                init_cond,
+                self.stop_conditions,
+                self.record,
+                self.delta_t,
+                0,
+                max_steps
+            )
+
+            # Сохраняем результат
+            key = f"V{V_int}_Theta{Theta_deg}"
+            self.results[key] = result
+
+            # Создаем DataFrame
+            columns = ['tau', 'm_0', 'V', 'a', 'Much_Number', 'C_Xa', 'X_a', 'alpha',
+                       'Theta_c_rad', 'dV_dtau', 'C_Ya', 'Y_a', 'dTheta_c_dtau', 'Theta_c_deg',
+                       'theta', 'y', 'dy_dtau', 'x', 'dx_dtau', 'M_z_alpha', 'omega_z',
+                       'domega_z_dtau', 'rho', 'p']
+
+            df = pd.DataFrame(result[:, 7:31], columns=columns)
+            self.dataframes[key] = df
+
+            # Добавляем в список всех случаев
+            self.cases_list.append((df, V_int, Theta_deg))
+
+            # Для обратной совместимости создаем атрибуты
+            if V_int == 245:
+                if Theta_deg == 20:
+                    self.df_1 = df
+                elif Theta_deg == 30:
+                    self.df_2 = df
+                elif Theta_deg == 40:
+                    self.df_3 = df
+                elif Theta_deg == 50:
+                    self.df_4 = df
+            elif V_int == 952:
+                if Theta_deg == 20:
+                    self.df_5 = df
+                elif Theta_deg == 30:
+                    self.df_6 = df
+                elif Theta_deg == 40:
+                    self.df_7 = df
+                elif Theta_deg == 50:
+                    self.df_8 = df
 
         pd.set_option('display.precision', 5)
         pd.set_option('display.max_columns', None)
@@ -193,80 +255,13 @@ class Simulation(Math_Model):
         # Список для сбора всех данных для CSV
         all_data = []
 
-        # Данные для вывода: (DataFrame, угол)
-        cases = [(self.df_1, 20), (self.df_2, 30), (self.df_3, 40), (self.df_4, 50)]
-
-        for df, angle in cases:
-            df_filtered = df.query('V>=0 and y>=-100').reset_index(drop=True)
-
-            for k in range(0, len(df_filtered), 10):
-                if len(df_filtered) > k:
-                    row = df_filtered.iloc[k]
-
-                    # Извлечение значений с правильными именами столбцов
-                    tau = f"{row['tau']:.2f}"
-                    m_0 = f"{row['m_0']:.2f}"
-                    V_val = f"{row['V']:.2f}"
-                    a_val = f"{row['a']:.2f}"
-                    M_val = f"{row['Much_Number']:.4f}"
-                    C_Xa_val = f"{row['C_Xa']:.4f}"
-                    X_a_val = f"{row['X_a']:.2f}"
-                    alpha_val = f"{row['alpha']:.5f}"
-                    Theta_c_rad_val = f"{row['Theta_c_rad']:.4f}"
-                    dV_dtau_val = f"{row['dV_dtau']:.2f}"
-                    C_Ya_val = f"{row['C_Ya']:.4f}"
-                    Y_a_val = f"{row['Y_a']:.2f}"
-                    dTheta_c_dtau_val = f"{row['dTheta_c_dtau']:.4f}"
-                    Theta_c_deg_val = f"{row['Theta_c_deg']:.3f}"
-                    theta_deg = f"{row['theta']:.2f}"
-                    y_val = f"{row['y']:.2f}"
-                    dy_dtau_val = f"{row['dy_dtau']:.2f}"
-                    x_val = f"{row['x']:.2f}"
-                    dx_dtau_val = f"{row['dx_dtau']:.2f}"
-                    M_z_alpha_val = f"{row['M_z_alpha']:.2f}"
-                    omega_z_val = f"{row['omega_z']:.4f}"
-                    domega_z_dtau_val = f"{row['domega_z_dtau']:.4f}" if 'domega_z_dtau' in row else f"{row['domega_dtau']:.4f}"
-                    rho_val = f"{row['rho']:.5f}"
-                    p_val = f"{row['p']:.1f}"
-
-                    # Сохраняем данные для CSV
-                    all_data.append({
-                        'Угол, град': angle,
-                        't, с': float(tau),
-                        'm, кг': float(m_0),
-                        'V, м/с': float(V_val),
-                        'a, м/с': float(a_val),
-                        'M': float(M_val),
-                        'C_Xa': float(C_Xa_val),
-                        'X_a, Н': float(X_a_val),
-                        'α, рад': float(alpha_val),
-                        'Θ_c, рад': float(Theta_c_rad_val),
-                        'dV/dt, м/с²': float(dV_dtau_val),
-                        'C_Ya': float(C_Ya_val),
-                        'Y_a, Н': float(Y_a_val),
-                        'dΘ_c/dt, с⁻¹': float(dTheta_c_dtau_val),
-                        'Θ_c, град': float(Theta_c_deg_val),
-                        'θ, град': float(theta_deg),
-                        'y, м': float(y_val),
-                        'dy/dt, м/с': float(dy_dtau_val),
-                        'x, м': float(x_val),
-                        'dx/dt, м/с': float(dx_dtau_val),
-                        'M_z^α, Н·м/рад': float(M_z_alpha_val),
-                        'ω_z, с⁻¹': float(omega_z_val),
-                        'dω_z/dt, с⁻²': float(domega_z_dtau_val),
-                        'ρ, кг/м³': float(rho_val),
-                        'p, Па': float(p_val)
-                    })
-
-        # Сохранение в CSV файл (с добавлением точек падения)
-        all_data_with_impact = all_data.copy()  # копируем существующие данные
-
-        for df, angle in cases:
+        # ВЫВОД ДЛЯ ВСЕХ СЛУЧАЕВ (все скорости и углы)
+        for df, velocity, angle in self.cases_list:
             df_filtered = df.query('V>=0 and y>=-100').reset_index(drop=True)
 
             # Заголовок таблицы
             print("\n" + "=" * 310)
-            print(f"РЕЗУЛЬТАТЫ РАСЧЕТА ТРАЕКТОРИИ (начальный угол Θ_c0 = {angle}°)")
+            print(f"РЕЗУЛЬТАТЫ РАСЧЕТА ТРАЕКТОРИИ (V0 = {velocity} м/с, начальный угол Θ_c0 = {angle}°)")
             print("=" * 310)
             print(
                 f"{'t,с':>6} | {'m,кг':>8} | {'V,м/с':>9} | {'a,м/с':>8} | {'M':>6} | {'C_Xa':>6} | {'X_a,Н':>9} | {'α,рад':>9} | {'Θ_c,рад':>9} | {'dV/dt':>9} | {'C_Ya':>6} | {'Y_a,Н':>8} | {'dΘ_c/dt':>9} | {'Θ_c,град':>9} | {'θ,град':>8} | {'y,м':>8} | {'dy/dt':>8} | {'x,м':>10} | {'dx/dt':>8} | {'M_z^α':>10} | {'ω_z':>8} | {'dω_z/dt':>9} | {'ρ,кг/м³':>11} | {'p,Па':>9}")
@@ -396,35 +391,6 @@ class Simulation(Math_Model):
                         'p': p_impact
                     }
                     all_rows.append(impact_row)
-
-                    # ДОБАВЛЯЕМ ТОЧКУ ПАДЕНИЯ В CSV СПИСОК
-                    all_data_with_impact.append({
-                        'Угол, град': angle,
-                        't, с': t_impact,
-                        'm, кг': m_impact,
-                        'V, м/с': V_impact,
-                        'a, м/с': a_impact,
-                        'M': M_impact,
-                        'C_Xa': C_Xa_impact,
-                        'X_a, Н': X_a_impact,
-                        'α, рад': alpha_impact,
-                        'Θ_c, рад': Theta_c_rad_impact,
-                        'dV/dt, м/с²': dV_dtau_impact,
-                        'C_Ya': C_Ya_impact,
-                        'Y_a, Н': Y_a_impact,
-                        'dΘ_c/dt, с⁻¹': dTheta_c_dtau_impact,
-                        'Θ_c, град': Theta_c_deg_impact,
-                        'θ, град': theta_impact,
-                        'y, м': 0.0,
-                        'dy/dt, м/с': dy_dtau_impact,
-                        'x, м': x_impact,
-                        'dx/dt, м/с': dx_dtau_impact,
-                        'M_z^α, Н·м/рад': M_z_alpha_impact,
-                        'ω_z, с⁻¹': omega_z_impact,
-                        'dω_z/dt, с⁻²': domega_z_dtau_impact,
-                        'ρ, кг/м³': rho_impact,
-                        'p, Па': p_impact
-                    })
                     break
 
             # Сортируем строки по времени
@@ -436,8 +402,9 @@ class Simulation(Math_Model):
                 print(
                     f"{row['tau']:6.2f} | {row['m_0']:8.2f} | {row['V']:9.2f} | {row['a']:8.2f} | {row['Much_Number']:6.4f} | {row['C_Xa']:6.4f} | {row['X_a']:9.2f} | {row['alpha']:9.5f} | {row['Theta_c_rad']:9.4f} | {row['dV_dtau']:9.2f} | {row['C_Ya']:6.4f} | {row['Y_a']:8.2f} | {row['dTheta_c_dtau']:9.4f} | {row['Theta_c_deg']:9.3f} | {row['theta']:8.2f} | {row['y']:8.2f} | {row['dy_dtau']:8.2f} | {row['x']:10.2f} | {row['dx_dtau']:8.2f} | {row['M_z_alpha']:10.2f} | {row['omega_z']:8.4f} | {row['domega_z_dtau']:9.4f} | {row['rho']:11.5f} | {row['p']:9.1f}{suffix}")
 
-                # Сохраняем ВСЕ строки (регулярные + падение) в all_data с округлением
+                # Сохраняем ВСЕ строки в all_data с округлением
                 all_data.append({
+                    'Скорость, м/с': velocity,
                     'Угол, град': angle,
                     't, с': round(row['tau'], 2),
                     'm, кг': round(row['m_0'], 2),
@@ -467,10 +434,10 @@ class Simulation(Math_Model):
 
             print("=" * 310)
 
-        # Сохраняем основной CSV (all_data уже содержит все строки)
+        # Сохраняем CSV
         if all_data:
             df_output = pd.DataFrame(all_data)
-            df_output = df_output.sort_values(['Угол, град', 't, с']).reset_index(drop=True)
+            df_output = df_output.sort_values(['Скорость, м/с', 'Угол, град', 't, с']).reset_index(drop=True)
             df_output.to_csv('траектория_полета.csv', index=False, encoding='utf-8-sig')
             print(f"\n✅ Данные сохранены в файл: траектория_полета.csv")
             print(f"   Всего сохранено строк: {len(df_output)} (включая точки падения)")
@@ -483,7 +450,7 @@ print("\n" + "=" * 80)
 print("НАЧАЛО РАСЧЕТА БАЛЛИСТИЧЕСКОЙ ТРАЕКТОРИИ")
 print("=" * 80)
 
-# Создание экземпляра класса Simulation (внутри __init__ уже происходят расчеты)
+# Создание экземпляра класса Simulation
 sim = Simulation(max_steps=15000)
 
 print("\n" + "=" * 80)
@@ -492,13 +459,33 @@ print("=" * 80)
 
 # Вывод дополнительной информации
 print("\nДоступные DataFrame:")
-print(f"  df_1 (угол 20°): {len(sim.df_1)} записей")
-print(f"  df_2 (угол 30°): {len(sim.df_2)} записей")
-print(f"  df_3 (угол 40°): {len(sim.df_3)} записей")
-print(f"  df_4 (угол 50°): {len(sim.df_4)} записей")
 
-# Пример вывода первых строк df_1
-print("\n" + "=" * 80)
-print("ПЕРВЫЕ 5 СТРОК df_1 (угол 20°):")
-print("=" * 80)
-print(sim.df_1.head())
+# Вариант 1: выводим все из словаря dataframes
+print(f"\nВсего рассчитано траекторий: {len(sim.dataframes)}")
+for key, df in sim.dataframes.items():
+    print(f"  {key}: {len(df)} записей")
+
+# Вариант 2: выводим только для V=245 (для обратной совместимости)
+print("\nТаблицы для V=245 м/с:")
+if hasattr(sim, 'df_1'):
+    print(f"  df_1 (V=245, угол 20°): {len(sim.df_1)} записей")
+if hasattr(sim, 'df_2'):
+    print(f"  df_2 (V=245, угол 30°): {len(sim.df_2)} записей")
+if hasattr(sim, 'df_3'):
+    print(f"  df_3 (V=245, угол 40°): {len(sim.df_3)} записей")
+if hasattr(sim, 'df_4'):
+    print(f"  df_4 (V=245, угол 50°): {len(sim.df_4)} записей")
+
+# Пример вывода первых строк первого DataFrame
+if hasattr(sim, 'df_1'):
+    print("\n" + "=" * 80)
+    print("ПЕРВЫЕ 5 СТРОК df_1 (V=245 м/с, угол 20°):")
+    print("=" * 80)
+    print(sim.df_1.head())
+elif sim.dataframes:
+    # Если df_1 нет, показываем первый из словаря
+    first_key = list(sim.dataframes.keys())[0]
+    print("\n" + "=" * 80)
+    print(f"ПЕРВЫЕ 5 СТРОК {first_key}:")
+    print("=" * 80)
+    print(sim.dataframes[first_key].head())
