@@ -198,7 +198,7 @@ class Simulation(Math_Model):
             Theta0 = init_cond[1]
 
             # Переводим угол в градусы для названия
-            Theta_deg = int(math.degrees(Theta0))
+            Theta_deg = round(math.degrees(Theta0))
             V_int = int(V0)
 
             # Выполняем расчет
@@ -445,6 +445,383 @@ class Simulation(Math_Model):
             print("\n⚠️ Нет данных для сохранения")
 
 
+class Plotter(Simulation):
+    # Класс вывода графиков зависимостей параметров ЛА от координаты от времени
+
+    def __init__(self, sim_instance):
+        """
+        Инициализация с уже готовым экземпляром Simulation
+
+        Параметры:
+        ----------
+        sim_instance : Simulation
+            Объект класса Simulation с выполненными расчетами
+        """
+        self.sim = sim_instance
+        self.velocities = [245, 952]
+        self.angles = [20, 30, 40, 50]
+
+        # Цвета для разных углов
+        self.angle_colors = {
+            20: 'steelblue',
+            30: 'seagreen',
+            40: 'mediumpurple',
+            50: 'coral'
+        }
+
+        # Настройка шрифтов
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.size'] = 14
+        plt.rcParams['axes.labelsize'] = 14
+        plt.rcParams['axes.titlesize'] = 14
+        plt.rcParams['legend.fontsize'] = 14
+        plt.rcParams['xtick.labelsize'] = 14
+        plt.rcParams['ytick.labelsize'] = 14
+        plt.rcParams['axes.linewidth'] = 2  # толщина осей
+        plt.rcParams['lines.linewidth'] = 1  # толщина линий графиков
+
+        # Словарь для хранения данных по скоростям и углам
+        self.data = {}
+        for V in self.velocities:
+            for angle in self.angles:
+                key = f"V{V}_Theta{angle}"
+                if key in self.sim.dataframes:
+                    self.data[key] = self.sim.dataframes[key]
+
+    def _get_linestyle(self, V):
+        """Возвращает стиль линии в зависимости от скорости"""
+        return '-' if V == 245 else '--'
+
+    def _get_color(self, angle):
+        """Возвращает цвет в зависимости от угла"""
+        return self.angle_colors.get(angle, 'black')
+
+    def plot_V_t(self, save_path=None):
+        """График зависимости скорости от времени V(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['V'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('V, м/с')
+        ax.set_title('Зависимость скорости от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_Theta_c_t(self, save_path=None):
+        """График зависимости угла траектории от времени Θ_c(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['Theta_c_deg'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('Θ_c, град')
+        ax.set_title('Зависимость угла траектории от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_y_t(self, save_path=None):
+        """График зависимости высоты от времени y(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['y'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('y, м')
+        ax.set_title('Зависимость высоты от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_x_t(self, save_path=None):
+        """График зависимости дальности от времени x(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['x'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('x, м')
+        ax.set_title('Зависимость дальности от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_theta_t(self, save_path=None):
+        """График зависимости угла тангажа от времени θ(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['theta'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('θ, град')
+        ax.set_title('Зависимость угла тангажа от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_alpha_t(self, save_path=None):
+        """График зависимости угла атаки от времени α(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['alpha'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('α, рад')
+        ax.set_title('Зависимость угла атаки от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_V_x(self, save_path=None):
+        """График зависимости скорости от дальности V(x)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    df_filtered = df[df['x'] >= 0]
+                    ax.plot(df_filtered['x'], df_filtered['V'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('x, м')
+        ax.set_ylabel('V, м/с')
+        ax.set_title('Зависимость скорости от дальности')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_Theta_c_x(self, save_path=None):
+        """График зависимости угла траектории от дальности Θ_c(x)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    df_filtered = df[df['x'] >= 0]
+                    ax.plot(df_filtered['x'], df_filtered['Theta_c_deg'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('x, м')
+        ax.set_ylabel('Θ_c, град')
+        ax.set_title('Зависимость угла траектории от дальности')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_y_x(self, save_path=None):
+        """График траектории полета y(x)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    df_filtered = df[df['x'] >= 0]
+                    ax.plot(df_filtered['x'], df_filtered['y'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('x, м')
+        ax.set_ylabel('y, м')
+        ax.set_title('Траектория полета')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_omega_z_t(self, save_path=None):
+        """График зависимости угловой скорости от времени ω_z(t)"""
+        fig, ax = plt.subplots(figsize=(20, 10))
+
+        for V in self.velocities:
+            linestyle = self._get_linestyle(V)
+            for angle in self.angles:
+                color = self._get_color(angle)
+                key = f"V{V}_Theta{angle}"
+                if key in self.data:
+                    df = self.data[key]
+                    ax.plot(df['tau'], df['omega_z'],
+                            color=color, linestyle=linestyle, linewidth=1,
+                            label=f'V={V} м/с, Θ={angle}°')
+
+        ax.set_xlabel('t, с')
+        ax.set_ylabel('ω_z, с⁻¹')
+        ax.set_title('Зависимость угловой скорости от времени')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(loc='best')
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return fig
+
+    def plot_all(self, save_dir="results/graphs"):
+        """Построение всех графиков с сохранением в папку"""
+        import os
+        os.makedirs(save_dir, exist_ok=True)
+
+        print("\n" + "=" * 80)
+        print("ПОСТРОЕНИЕ ГРАФИКОВ")
+        print("=" * 80)
+
+        graphs = [
+            ('V(t)', self.plot_V_t),
+            ('Theta_c(t)', self.plot_Theta_c_t),
+            ('y(t)', self.plot_y_t),
+            ('x(t)', self.plot_x_t),
+            ('theta(t)', self.plot_theta_t),
+            ('alpha(t)', self.plot_alpha_t),
+            ('V(x)', self.plot_V_x),
+            ('Theta_c(x)', self.plot_Theta_c_x),
+            ('y(x)', self.plot_y_x),
+            ('omega_z(t)', self.plot_omega_z_t)
+        ]
+
+        for name, func in graphs:
+            print(f"  Строим график: {name}")
+            save_path = os.path.join(save_dir, f"{name.replace('(', '_').replace(')', '')}.png")
+            func(save_path=save_path)
+
+        print(f"\n✅ Все графики сохранены в папку: {save_dir}")
+        print("=" * 80)
+
+        def plot_all(self, save_dir="graphics"):
+            """Построение всех графиков с сохранением в папку graphics"""
+            import os
+            os.makedirs(save_dir, exist_ok=True)
+
+            print("\n" + "=" * 80)
+            print("ПОСТРОЕНИЕ И СОХРАНЕНИЕ ГРАФИКОВ")
+            print("=" * 80)
+
+            graphs = [
+                ('V(t)', self.plot_V_t),
+                ('Theta_c(t)', self.plot_Theta_c_t),
+                ('y(t)', self.plot_y_t),
+                ('x(t)', self.plot_x_t),
+                ('theta(t)', self.plot_theta_t),
+                ('alpha(t)', self.plot_alpha_t),
+                ('V(x)', self.plot_V_x),
+                ('Theta_c(x)', self.plot_Theta_c_x),
+                ('y(x)', self.plot_y_x),
+                ('omega_z(t)', self.plot_omega_z_t)
+            ]
+
+            for name, func in graphs:
+                print(f"  Строим и сохраняем: {name}")
+                save_path = os.path.join(save_dir, f"{name.replace('(', '_').replace(')', '')}.png")
+                func(save_path=save_path)
+                plt.close()  # Закрываем фигуру после сохранения
+
+            print(f"\n✅ Все графики сохранены в папку: {save_dir}")
+            print("=" * 80)
+
+
+# ==================== ОСНОВНАЯ ЧАСТЬ ====================
 
 print("\n" + "=" * 80)
 print("НАЧАЛО РАСЧЕТА БАЛЛИСТИЧЕСКОЙ ТРАЕКТОРИИ")
@@ -457,15 +834,16 @@ print("\n" + "=" * 80)
 print("РАСЧЕТ ЗАВЕРШЕН")
 print("=" * 80)
 
+# Построение графиков
+plotter = Plotter(sim)
+plotter.plot_all(save_dir="results/graphs")
+
 # Вывод дополнительной информации
 print("\nДоступные DataFrame:")
-
-# Вариант 1: выводим все из словаря dataframes
 print(f"\nВсего рассчитано траекторий: {len(sim.dataframes)}")
 for key, df in sim.dataframes.items():
     print(f"  {key}: {len(df)} записей")
 
-# Вариант 2: выводим только для V=245 (для обратной совместимости)
 print("\nТаблицы для V=245 м/с:")
 if hasattr(sim, 'df_1'):
     print(f"  df_1 (V=245, угол 20°): {len(sim.df_1)} записей")
@@ -476,16 +854,6 @@ if hasattr(sim, 'df_3'):
 if hasattr(sim, 'df_4'):
     print(f"  df_4 (V=245, угол 50°): {len(sim.df_4)} записей")
 
-# Пример вывода первых строк первого DataFrame
-if hasattr(sim, 'df_1'):
-    print("\n" + "=" * 80)
-    print("ПЕРВЫЕ 5 СТРОК df_1 (V=245 м/с, угол 20°):")
-    print("=" * 80)
-    print(sim.df_1.head())
-elif sim.dataframes:
-    # Если df_1 нет, показываем первый из словаря
-    first_key = list(sim.dataframes.keys())[0]
-    print("\n" + "=" * 80)
-    print(f"ПЕРВЫЕ 5 СТРОК {first_key}:")
-    print("=" * 80)
-    print(sim.dataframes[first_key].head())
+# Построение и сохранение графиков
+plotter = Plotter(sim)
+plotter.plot_all(save_dir="graphics")
