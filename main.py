@@ -896,7 +896,7 @@ class Inverse_Problem(Simulation):
         fig, ax = plt.subplots(figsize=(20, 10))
 
         # График зависимости дальности от угла
-        ax.plot(angles, ranges, 'b-', linewidth=2, label=f'V₀ = {V0} м/с')
+        ax.plot(angles, ranges, 'steelblue', linewidth=1, label=f'V₀ = {V0} м/с')
 
         # Находим оптимальный угол
         max_idx = np.argmax(ranges)
@@ -904,7 +904,7 @@ class Inverse_Problem(Simulation):
         max_range = ranges[max_idx]
 
         # Отмечаем точку максимума
-        ax.scatter(opt_angle, max_range, color='red', s=150, zorder=5,
+        ax.scatter(opt_angle, max_range, color='palegreen', s=150, zorder=5,
                    label=f'Оптимум: {opt_angle:.2f}°, дальность = {max_range:.0f} м')
 
         ax.set_xlabel('Начальный угол $\\Theta_0$, град')
