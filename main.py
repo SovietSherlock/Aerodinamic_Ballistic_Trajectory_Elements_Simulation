@@ -457,6 +457,7 @@ class Plotter(Simulation):
         sim_instance : Simulation
             Объект класса Simulation с выполненными расчетами
         """
+        super().__init__()
         self.sim = sim_instance
         self.velocities = [245, 952]
         self.angles = [20, 30, 40, 50]
