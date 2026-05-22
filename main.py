@@ -820,7 +820,7 @@ class Inverse_Problem(Simulation):
         df_ground = df[df['y'] <= 0]
 
         if len(df_ground) > 0:
-            # Если есть точка с отрицательной высотой, интерполируем
+        #     Если есть точка с отрицательной высотой, интерполируем
             if len(df_ground) == 1 and df_ground.iloc[0]['y'] < 0:
                 # Ищем переход через ноль
                 for i in range(1, len(df)):
