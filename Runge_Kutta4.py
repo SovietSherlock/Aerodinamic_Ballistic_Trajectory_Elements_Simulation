@@ -36,7 +36,7 @@ def Runge_Kutta4(ODE_system, init_conditions, end_conditions, record, dt, t_0 = 
     result[i, 1: m] = y
     result[i, m: m + n] = record(t[i], y)
 
-    while end_conditions(t[i], y)>0 and i+1<max_steps:
+    while i+1<max_steps:
         k_1 = ODE_system(t[i], y)
         k_2 = ODE_system(t[i] + 0.5 * dt, y + k_1 * 0.5 * dt)
         k_3 = ODE_system(t[i] + 0.5 * dt, y + k_2 * 0.5 * dt)
@@ -47,4 +47,5 @@ def Runge_Kutta4(ODE_system, init_conditions, end_conditions, record, dt, t_0 = 
         result[i, 0] = t[i]
         result[i, 1: m] = y
         result[i, m: m + n] = record(t[i], y)
-    return result[0: i + 1, :]
+        if end_conditions(y) is True:
+            return result[0: i + 1, :]

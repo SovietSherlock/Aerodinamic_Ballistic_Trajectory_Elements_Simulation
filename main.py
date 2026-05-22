@@ -82,6 +82,7 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def alpha(self, t):
         # Метод вычисления угла атаки, ̊:
+        #print(t[5] , t[1], t[4])
         return t[5] - t[1]
 
     def X_a(self, t):
@@ -94,6 +95,7 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def M_z_alpha(self, t):
         # Метод вычисления градиента статического аэродинамического момента относительно связанной оси z ЛА:
+        #print('Mz', -(self.C_Xa_interp + self.C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l / 120)
         return -(self.C_Xa_interp + self.C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l
 
     def a(self,t):
@@ -119,7 +121,7 @@ class Math_Model(Aircraft_Initial_Parameters):
         # генератор входных параметров для алгоритма Runge_Kutta4:
         for v in self.velocities:
             for Theta in self.angles:
-                yield np.array([v, Theta, 0, 0.001, Theta, 0])
+                yield np.array([v, Theta, 0, 0, 0, Theta])
 
 
 
@@ -167,11 +169,12 @@ class Math_Model(Aircraft_Initial_Parameters):
                          math.degrees(t[1]), math.degrees(t[5]), t[3], dy_dt, t[2], dx_dt,
                          self.M_z_alpha(t), t[4], domega_dt, self.atm.rho(t[3]), self.atm.p(t[3])])
 
-    def stop_conditions(self, tau, t):
+    def stop_conditions(self, t):
          # функция условия окончания интегрирования:
-         if t[3] < -1:
-             return -1
-         return 1
+         print(t[3])
+         if t[3] < 0:
+             return True
+         return False
 
     def time_step(self, t):
         self.dtau = self.delta_t
