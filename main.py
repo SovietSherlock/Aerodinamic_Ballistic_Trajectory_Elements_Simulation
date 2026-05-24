@@ -95,7 +95,6 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def M_z_alpha(self, t):
         # Метод вычисления градиента статического аэродинамического момента относительно связанной оси z ЛА:
-        #print('Mz', -(self.C_Xa_interp + self.C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l / 120)
         return -(self.C_Xa_interp + self.C_Ya_interp)*self.S_m*(self.atm.rho(t[3])/2)*(t[0]**2)*self.delta_l
 
     def a(self,t):
@@ -171,7 +170,6 @@ class Math_Model(Aircraft_Initial_Parameters):
 
     def stop_conditions(self, t):
          # функция условия окончания интегрирования:
-         print(t[3])
          if t[3] < 0:
              return True
          return False
@@ -984,9 +982,9 @@ print("\n" + "=" * 80)
 print("РАСЧЕТ ЗАВЕРШЕН")
 print("=" * 80)
 
-# Построение графиков
+# Построение и сохранение графиков
 plotter = Plotter(sim)
-plotter.plot_all(save_dir="results/graphs")
+plotter.plot_all(save_dir="results/graphics")  # Сохраняем в папку graphics
 
 # Вывод дополнительной информации
 print("\nДоступные DataFrame:")
@@ -1003,10 +1001,6 @@ if hasattr(sim, 'df_3'):
     print(f"  df_3 (V=245, угол 40°): {len(sim.df_3)} записей")
 if hasattr(sim, 'df_4'):
     print(f"  df_4 (V=245, угол 50°): {len(sim.df_4)} записей")
-
-# Построение и сохранение графиков
-plotter = Plotter(sim)
-plotter.plot_all(save_dir="graphics")  # Сохраняем в папку graphics
 
 print("\n" + "=" * 80)
 print("РЕШЕНИЕ ОБРАТНОЙ ЗАДАЧИ")
