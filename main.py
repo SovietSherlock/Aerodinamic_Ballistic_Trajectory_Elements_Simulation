@@ -179,7 +179,7 @@ class Math_Model(Aircraft_Initial_Parameters):
         return self.dtau
 
 
-class Simulation(Math_Model):
+class Simulation_Direct_Problem(Math_Model):
     # Класс вычислений переменных параметров по математической модели:
 
     def __init__(self, max_steps=10):
@@ -446,7 +446,7 @@ class Simulation(Math_Model):
             print("\n⚠️ Нет данных для сохранения")
 
 
-class Plotter:
+class Plotter_Direct_Problem:
     # Класс вывода графиков зависимостей параметров ЛА от координаты и от времени
 
     def __init__(self, sim_instance):
@@ -780,7 +780,7 @@ class Plotter:
         print("=" * 80)
 
 
-class Inverse_Problem(Simulation):
+class Inverse_Problem(Simulation_Direct_Problem):
     # Класс вычисления оптимальных значений начального угла наклона траектории, обеспечивающих максимальную дальность полета ЛА
 
     def __init__(self, max_steps=15000):
@@ -798,7 +798,7 @@ class Inverse_Problem(Simulation):
         # Начальные условия
         init_cond = np.array([V0, angle_rad, 0, 0.001, angle_rad, 0])
 
-        # Выполняем расчет (используем self.max_steps вместо self.sim.max_steps)
+        # Выполняем расчет
         result = Runge_Kutta4(
             self.init_ODE_system,
             init_cond,
@@ -806,7 +806,7 @@ class Inverse_Problem(Simulation):
             self.record,
             self.delta_t,
             0,
-            self.max_steps  # ← ИСПРАВЛЕНО: используем self.max_steps
+            self.max_steps
         )
 
         # Создаем DataFrame
@@ -976,14 +976,14 @@ print("НАЧАЛО РАСЧЕТА БАЛЛИСТИЧЕСКОЙ ТРАЕКТОР
 print("=" * 80)
 
 # Создание экземпляра класса Simulation
-sim = Simulation(max_steps=15000)
+sim = Simulation_Direct_Problem(max_steps=15000)
 
 print("\n" + "=" * 80)
 print("РАСЧЕТ ЗАВЕРШЕН")
 print("=" * 80)
 
 # Построение и сохранение графиков
-plotter = Plotter(sim)
+plotter = Plotter_Direct_Problem(sim)
 plotter.plot_all(save_dir="results/graphics")  # Сохраняем в папку graphics
 
 # Вывод дополнительной информации
