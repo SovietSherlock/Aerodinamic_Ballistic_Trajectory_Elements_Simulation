@@ -439,7 +439,7 @@ class Simulation(Math_Model):
         if all_data:
             df_output = pd.DataFrame(all_data)
             df_output = df_output.sort_values(['Скорость, м/с', 'Угол, град', 't, с']).reset_index(drop=True)
-            df_output.to_csv('траектория_полета.csv', index=False, encoding='utf-8-sig')
+            df_output.to_csv('траектория_полета.csv', index=False, sep=',', decimal=',', encoding='utf-8-sig')
             print(f"\n✅ Данные сохранены в файл: траектория_полета.csv")
             print(f"   Всего сохранено строк: {len(df_output)} (включая точки падения)")
         else:
@@ -464,14 +464,14 @@ class Plotter:
 
         # Настройка шрифтов
         plt.rcParams['font.family'] = 'Times New Roman'
-        plt.rcParams['font.size'] = 14
-        plt.rcParams['axes.labelsize'] = 14
-        plt.rcParams['axes.titlesize'] = 14
-        plt.rcParams['legend.fontsize'] = 14
-        plt.rcParams['xtick.labelsize'] = 14
-        plt.rcParams['ytick.labelsize'] = 14
+        plt.rcParams['font.size'] = 16
+        plt.rcParams['axes.labelsize'] = 16
+        plt.rcParams['axes.titlesize'] = 16
+        plt.rcParams['legend.fontsize'] = 16
+        plt.rcParams['xtick.labelsize'] = 16
+        plt.rcParams['ytick.labelsize'] = 16
         plt.rcParams['axes.linewidth'] = 2
-        plt.rcParams['lines.linewidth'] = 1
+        plt.rcParams['lines.linewidth'] = 2
 
         # Использование Times New Roman в математических формулах:
         plt.rcParams['mathtext.fontset'] = 'custom'
@@ -506,7 +506,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['V'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -531,7 +531,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['Theta_c_deg'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -556,7 +556,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['y'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -581,7 +581,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['x'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -606,7 +606,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['theta'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -631,7 +631,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['alpha'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -657,7 +657,7 @@ class Plotter:
                     df = self.data[(V, angle)]
                     df_filtered = df[df['x'] >= 0]
                     ax.plot(df_filtered['x'], df_filtered['V'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$x$, м')
@@ -683,7 +683,7 @@ class Plotter:
                     df = self.data[(V, angle)]
                     df_filtered = df[df['x'] >= 0]
                     ax.plot(df_filtered['x'], df_filtered['Theta_c_deg'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$x$, м')
@@ -709,7 +709,7 @@ class Plotter:
                     df = self.data[(V, angle)]
                     df_filtered = df[df['x'] >= 0]
                     ax.plot(df_filtered['x'], df_filtered['y'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$x$, м')
@@ -734,7 +734,7 @@ class Plotter:
                 if (V, angle) in self.data:
                     df = self.data[(V, angle)]
                     ax.plot(df['tau'], df['omega_z'],
-                            color=color, linestyle=linestyle, linewidth=1,
+                            color=color, linestyle=linestyle, linewidth=2,
                             label=f'$V_0={V}$ м/с, $\\Theta_0={angle}^\\circ$')
 
         ax.set_xlabel('$t$, с')
@@ -897,7 +897,7 @@ class Inverse_Problem(Simulation):
         fig, ax = plt.subplots(figsize=(20, 10))
 
         # График зависимости дальности от угла
-        ax.plot(angles, ranges, 'steelblue', linewidth=1, label=f'V₀ = {V0} м/с')
+        ax.plot(angles, ranges, 'steelblue', linewidth=2, label=f'V₀ = {V0} м/с')
 
         # Находим оптимальный угол
         max_idx = np.argmax(ranges)
@@ -946,13 +946,13 @@ class Inverse_Problem(Simulation):
 
             # Сохраняем таблицу результатов в CSV
             df_results = pd.DataFrame([
-                {'Угол, град': angle,
-                 'Дальность, м': results[angle]['range'],
-                 'Время полета, с': results[angle]['time']}
+                {'Угол, град': round(angle,1),
+                 'Дальность, м': round(results[angle]['range'],3),
+                 'Время полета, с': round(results[angle]['time'],3)}
                 for angle in results.keys()
             ])
             csv_path = os.path.join(save_dir, f"range_results_V{V}.csv")
-            df_results.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            df_results.to_csv(csv_path, sep=',', decimal=',', index=False, encoding='utf-8-sig')
             print(f"  Результаты сохранены в: {csv_path}")
 
         # Вывод сводной таблицы
