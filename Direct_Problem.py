@@ -180,7 +180,7 @@ class Math_Model(Aircraft_Initial_Parameters):
 
 
 class Simulation_Direct_Problem(Math_Model):
-    # Класс вычислений переменных параметров по математической модели:
+    # Класс вычислений переменных параметров для прямой задачи:
 
     def __init__(self, max_steps=10):
         super().__init__()
@@ -447,7 +447,7 @@ class Simulation_Direct_Problem(Math_Model):
 
 
 class Plotter_Direct_Problem:
-    # Класс вывода графиков зависимостей параметров ЛА от координаты и от времени
+    # Класс вывода графиков зависимостей параметров ЛА от координаты и от времени для прямой задачи:
 
     def __init__(self, sim_instance):
         self.sim = sim_instance
