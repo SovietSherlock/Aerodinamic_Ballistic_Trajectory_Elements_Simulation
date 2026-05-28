@@ -796,7 +796,7 @@ class Inverse_Problem(Simulation_Direct_Problem):
         angle_rad = math.radians(angle_deg)
 
         # Начальные условия
-        init_cond = np.array([V0, angle_rad, 0, 0.001, angle_rad, 0])
+        init_cond = np.array([V0, angle_rad, 0, 0, angle_rad, 0])
 
         # Выполняем расчет
         result = Runge_Kutta4(
