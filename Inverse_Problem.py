@@ -206,7 +206,7 @@ class Simulation_Optimal:
             all_rows = []
 
             # Добавляем строки с шагом (не более 40 строк на траекторию)
-            step = max(1, len(df_filtered) // 40)
+            step = 10
 
             for k in range(0, len(df_filtered), step):
                 if len(df_filtered) > k:
@@ -377,7 +377,7 @@ class Simulation_Optimal:
             df_filtered = df.query('V>=0 and y>=-100').reset_index(drop=True)
 
             # Добавляем все строки с шагом для уменьшения размера файла
-            step = max(1, len(df_filtered) // 100)
+            step = 10
 
             for k in range(0, len(df_filtered), step):
                 if len(df_filtered) > k:
