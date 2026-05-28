@@ -780,14 +780,16 @@ class Plotter_Direct_Problem:
         print("=" * 80)
 
 
-class Inverse_Problem(Simulation_Direct_Problem):
-    # Класс вычисления оптимальных значений начального угла наклона траектории, обеспечивающих максимальную дальность полета ЛА
+class Inverse_Problem:
+    # Класс вычисления оптимальных значений начального угла наклона траектории,
+    # обеспечивающих максимальную дальность полета ЛА
 
     def __init__(self, max_steps=15000):
-        super().__init__(max_steps)
+        self.model = Math_Model()  # Создаем отдельный экземпляр модели
         self.velocities = [245, 952]
-        self.angle_range = np.arange(15, 55.1, 0.1)  # углы от 15 до 55 градусов с шагом 0.1°
-        self.max_steps = max_steps  # сохраняем для использования в расчетах
+        self.angle_range = np.arange(15, 55.1, 0.05)  # углы от 15 до 55 градусов с шагом 0.5°
+        self.max_steps = max_steps
+        self.delta_t = 0.1
 
     def calculate_range_for_angle(self, V0, angle_deg):
         # Расчет дальности полета для заданной скорости и угла:
@@ -796,14 +798,14 @@ class Inverse_Problem(Simulation_Direct_Problem):
         angle_rad = math.radians(angle_deg)
 
         # Начальные условия
-        init_cond = np.array([V0, angle_rad, 0, 0, angle_rad, 0])
+        init_cond = np.array([V0, angle_rad, 0, 1e-10, 0, angle_rad])
 
         # Выполняем расчет
         result = Runge_Kutta4(
-            self.init_ODE_system,
+            self.model.init_ODE_system,
             init_cond,
-            self.stop_conditions,
-            self.record,
+            self.model.stop_conditions,
+            self.model.record,
             self.delta_t,
             0,
             self.max_steps
@@ -821,7 +823,6 @@ class Inverse_Problem(Simulation_Direct_Problem):
         df_ground = df[df['y'] <= 0]
 
         if len(df_ground) > 0:
-        #     Если есть точка с отрицательной высотой, интерполируем
             if len(df_ground) == 1 and df_ground.iloc[0]['y'] < 0:
                 # Ищем переход через ноль
                 for i in range(1, len(df)):
@@ -852,7 +853,7 @@ class Inverse_Problem(Simulation_Direct_Problem):
             return last_row['x'], last_row['tau']
 
     def find_optimal_angle(self, V0, verbose=True):
-        #Поиск оптимального угла для заданной скорости:
+        # Поиск оптимального угла для заданной скорости:
 
         results = {}
         ranges = []
@@ -946,13 +947,13 @@ class Inverse_Problem(Simulation_Direct_Problem):
 
             # Сохраняем таблицу результатов в CSV
             df_results = pd.DataFrame([
-                {'Угол, град': round(angle,1),
-                 'Дальность, м': round(results[angle]['range'],3),
-                 'Время полета, с': round(results[angle]['time'],3)}
+                {'Угол, град': round(angle, 1),
+                 'Дальность, м': round(results[angle]['range'], 3),
+                 'Время полета, с': round(results[angle]['time'], 3)}
                 for angle in results.keys()
             ])
             csv_path = os.path.join(save_dir, f"range_results_V{V}.csv")
-            df_results.to_csv(csv_path, sep=',', decimal=',', index=False, encoding='utf-8-sig')
+            df_results.to_csv(csv_path, sep=';', decimal=',', index=False, encoding='utf-8-sig')
             print(f"  Результаты сохранены в: {csv_path}")
 
         # Вывод сводной таблицы
@@ -962,7 +963,6 @@ class Inverse_Problem(Simulation_Direct_Problem):
         print(f"{'Скорость V₀, м/с':>18} | {'Оптимальный угол, °':>20} | {'Максимальная дальность, м':>25} | {'Время полета, с':>16}")
         print("-" * 85)
         for V, data in results_summary.items():
-            # Находим время для оптимального угла
             opt_time = data['all_results'][data['optimal_angle']]['time']
             print(f"{V:>18} | {data['optimal_angle']:>20.2f} | {data['max_range']:>25.2f} | {opt_time:>16.2f}")
         print("=" * 60)
