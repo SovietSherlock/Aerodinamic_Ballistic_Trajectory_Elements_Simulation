@@ -138,7 +138,7 @@ class Simulation_Optimal:
 
         # Выполняем расчеты
         for case in self.optimal_cases:
-            init_cond = np.array([case['V'], case['angle_rad'], 0, 0.001, case['angle_rad'], 0])
+            init_cond = np.array([case['V'], case['angle_rad'], 0, 0.001, 0, case['angle_rad']])
 
             result = Runge_Kutta4(
                 self.model.init_ODE_system,
