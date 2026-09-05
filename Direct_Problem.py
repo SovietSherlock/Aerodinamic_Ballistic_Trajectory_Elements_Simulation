@@ -28,8 +28,8 @@ class Aircraft_Initial_Parameters:
 
     def __init__(self):
         # Кинематические параметры начального состояния движения ЛА:
-        self.v_01 = 245 # начальная скорость летательного аппарата в первом случае, м/с
-        self.v_02 = 952 # начальная скорость летательного аппарата во втором случае, м/с
+        self.v_01 = 245 # начальная скорость летательного аппарата в первом случае, м/с    <---------------ИЗМЕНИТЬ!!!
+        self.v_02 = 952 # начальная скорость летательного аппарата во втором случае, м/с    <---------------ИЗМЕНИТЬ!!!
         self.Theta_c0_1 = math.radians(20) # Начальный угол наклона траектории 20 ̊
         self.Theta_c0_2 = math.radians(30) # Начальный угол наклона траектории 30 ̊
         self.Theta_c0_3 = math.radians(40) # Начальный угол наклона траектории 40 ̊
@@ -124,23 +124,6 @@ class Math_Model(Aircraft_Initial_Parameters):
 
 
 
-    #def init_conditions_1(self):
-        # функция входных параметров для Theta_c0_1:
-        #return np.array([self.v_01, self.Theta_c0_1, 0, 0.001, 0, 0])
-
-    #def init_conditions_2(self):
-        # функция входных параметров для Theta_c0_2:
-        #return np.array([self.v_01, self.Theta_c0_2, 0, 0.001, 0, 0])
-
-    #def init_conditions_3(self):
-        # функция входных параметров для Theta_c0_3:
-        #return np.array([self.v_01, self.Theta_c0_3, 0, 0.001, 0, 0])
-
-    #def init_conditions_4(self):
-        # функция входных параметров для Theta_c0_4:
-        #return np.array([self.v_01, self.Theta_c0_4, 0, 0.001, 0, 0])
-
-
     def init_ODE_system(self, tau, t):
         # функция подготовки системы ОДУ на вход метода Runge-Kutta4
         M = self.Mach_number(t)  # вычисление числа Маха на шаге интегрирования
@@ -230,7 +213,7 @@ class Simulation_Direct_Problem(Math_Model):
             self.cases_list.append((df, V_int, Theta_deg))
 
             # Для обратной совместимости создаем атрибуты
-            if V_int == 245:
+            if V_int == self.v_01:
                 if Theta_deg == 20:
                     self.df_1 = df
                 elif Theta_deg == 30:
@@ -239,7 +222,7 @@ class Simulation_Direct_Problem(Math_Model):
                     self.df_3 = df
                 elif Theta_deg == 50:
                     self.df_4 = df
-            elif V_int == 952:
+            elif V_int == self.v_02:
                 if Theta_deg == 20:
                     self.df_5 = df
                 elif Theta_deg == 30:
@@ -451,7 +434,9 @@ class Plotter_Direct_Problem:
 
     def __init__(self, sim_instance):
         self.sim = sim_instance
-        self.velocities = [245, 952]
+        self.v_01 = self.sim.v_01
+        self.v_02 = self.sim.v_02
+        self.velocities = [self.v_01, self.v_02]
         self.angles = [20, 30, 40, 50]
 
         # Цвета для разных углов
@@ -489,7 +474,7 @@ class Plotter_Direct_Problem:
 
     def _get_linestyle(self, V):
         #Возвращает стиль линии в зависимости от скорости
-        return '-' if V == 245 else '--'
+        return '-' if V == self.v_01 else '--'
 
     def _get_color(self, angle):
         #Возвращает цвет в зависимости от угла
@@ -784,9 +769,12 @@ class Inverse_Problem:
     # Класс вычисления оптимальных значений начального угла наклона траектории,
     # обеспечивающих максимальную дальность полета ЛА
 
-    def __init__(self, max_steps=15000):
+    def __init__(self,sim_instance, max_steps=15000):
+        self.sim = sim_instance
         self.model = Math_Model()  # Создаем отдельный экземпляр модели
-        self.velocities = [245, 952]
+        self.v_01 = self.sim.v_01
+        self.v_02 = self.sim.v_02
+        self.velocities = [self.v_01, self.v_02]
         self.angle_range = np.arange(15, 55.1, 0.05)  # углы от 15 до 55 градусов с шагом 0.5°
         self.max_steps = max_steps
         self.delta_t = 0.1

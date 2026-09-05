@@ -13,10 +13,10 @@ class Aircraft_Initial_Parameters_Optimal:
 
     def __init__(self):
         # Кинематические параметры начального состояния движения ЛА:
-        self.v_01 = 245  # начальная скорость летательного аппарата в первом случае, м/с
-        self.v_02 = 952  # начальная скорость летательного аппарата во втором случае, м/с
-        self.Theta_c0_1 = math.radians(44.25)  # Оптимальный начальный угол наклона траектории для 245 м/с 44,20°
-        self.Theta_c0_2 = math.radians(47.40)  # Оптимальный начальный угол наклона траектории для 952 м/с 47,40°
+        self.v_01 = 245  # начальная скорость летательного аппарата в первом случае, м/с    <---------------ИЗМЕНИТЬ!!!
+        self.v_02 = 952  # начальная скорость летательного аппарата во втором случае, м/с    <---------------ИЗМЕНИТЬ!!!
+        self.Theta_c0_1 = math.radians(44.25)  # Оптимальный начальный угол наклона траектории для v_01    <---------------ИЗМЕНИТЬ!!!
+        self.Theta_c0_2 = math.radians(47.40)  # Оптимальный начальный угол наклона траектории для v_02    <---------------ИЗМЕНИТЬ!!!
 
         # Инерционные параметры ЛА:
         self.g_0 = 9.80665  # ускорение силы притяжения на поверхности Земли, м/(с^2)
@@ -124,21 +124,27 @@ class Simulation_Optimal:
 
     def __init__(self, max_steps=15000):
         self.model = Math_Model_Optimal()
+        self.v_01 = self.model.v_01
+        self.v_02 = self.model.v_02
+        self.Theta_c0_1 = self.model.Theta_c0_1
+        self.Theta_c0_2 = self.model.Theta_c0_2
         self.max_steps = max_steps
         self.results = {}
         self.dataframes = {}
 
         # Оптимальные параметры
         self.optimal_cases = [
-            {'V': 245, 'angle_deg': 44.20, 'angle_rad': math.radians(44.20), 'color': 'crimson',
-             'name': 'V₀ = 245 м/с, Θ₀ = 44.20°'},
-            {'V': 952, 'angle_deg': 47.40, 'angle_rad': math.radians(47.40), 'color': 'royalblue',
-             'name': 'V₀ = 952 м/с, Θ₀ = 47.40°'}
+            {'V': self.v_01, 'angle_deg': math.degrees(self.Theta_c0_1), 'angle_rad': self.Theta_c0_1,
+             'color': 'crimson',
+             'name': f'V₀ = {self.v_01} м/с, Θ₀ = {math.degrees(self.Theta_c0_1):.2f}°'},
+            {'V': self.v_02, 'angle_deg': math.degrees(self.Theta_c0_2), 'angle_rad': self.Theta_c0_2,
+             'color': 'royalblue',
+             'name': f'V₀ = {self.v_02} м/с, Θ₀ = {math.degrees(self.Theta_c0_2):.2f}°'}
         ]
 
         # Выполняем расчеты
         for case in self.optimal_cases:
-            init_cond = np.array([case['V'], case['angle_rad'], 0, 0.001, 0, case['angle_rad']])
+            init_cond = np.array([case['V'], case['angle_rad'], 0, 0, 0, case['angle_rad']])
 
             result = Runge_Kutta4(
                 self.model.init_ODE_system,
